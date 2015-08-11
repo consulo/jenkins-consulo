@@ -1,4 +1,4 @@
-package org.mustbe.consulo.jenkins.installation;
+package org.mustbe.jenkins.consulo.installation;
 
 import java.io.File;
 import java.util.List;

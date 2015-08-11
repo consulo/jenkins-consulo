@@ -1,4 +1,4 @@
-package org.mustbe.consulo.jenkins.project;
+package org.mustbe.jenkins.consulo.project;
 
 import java.io.File;
 import java.io.IOException;

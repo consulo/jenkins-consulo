@@ -1,4 +1,4 @@
-package org.mustbe.consulo.jenkins.build;
+package org.mustbe.jenkins.consulo.build;
 
 import net.sf.json.JSONObject;
 

@@ -1,8 +1,8 @@
-package org.mustbe.consulo.jenkins.project;
+package org.mustbe.jenkins.consulo.project;
 
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.mustbe.consulo.jenkins.build.ConsuloBuilder;
+import org.mustbe.jenkins.consulo.build.ConsuloBuilder;
 import hudson.Extension;
 import hudson.model.ItemGroup;
 import hudson.model.Project;
