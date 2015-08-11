@@ -1,10 +1,15 @@
-package org.mustbe.consulo.jenkins.build;
+package jenkins.consulo.build;
+
+import java.io.IOException;
 
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.StaplerRequest;
 import hudson.Extension;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 
@@ -36,5 +41,11 @@ public class ConsuloBuilder extends Builder
 		{
 			return new ConsuloBuilder();
 		}
+	}
+
+	@Override
+	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException
+	{
+		return super.perform(build, launcher, listener);
 	}
 }

@@ -1,4 +1,4 @@
-package org.mustbe.consulo.jenkins.installation;
+package jenkins.consulo.installation;
 
 import java.io.File;
 import java.util.List;
@@ -14,17 +14,17 @@ import jenkins.model.Jenkins;
 
 /**
  * @author VISTALL
- * @since 11.08.2015
+ * @since 13.08.2016
  */
-public class ConsuloInstallation extends ToolInstallation
+public class GWTInstallation extends ToolInstallation
 {
 	@Extension
-	public static class DescriptorImpl extends ToolDescriptor<ConsuloInstallation>
+	public static class DescriptorImpl extends ToolDescriptor<GWTInstallation>
 	{
 		@Override
 		public String getDisplayName()
 		{
-			return "Consulo";
+			return "GWT";
 		}
 
 		@Override
@@ -42,13 +42,13 @@ public class ConsuloInstallation extends ToolInstallation
 
 			if(!value.isDirectory())
 			{
-				return FormValidation.error("Not Consulo Directory");
+				return FormValidation.error("Not GWT Directory");
 			}
 
-			File ideaJar = new File(value, "lib/idea.jar");
-			if(!ideaJar.exists())
+			File gwtUserJar = new File(value, "gwt-user.jar");
+			if(!gwtUserJar.exists())
 			{
-				return FormValidation.error("Not Consulo Directory");
+				return FormValidation.error("Not GWT Directory");
 			}
 
 			return FormValidation.ok();
@@ -56,7 +56,7 @@ public class ConsuloInstallation extends ToolInstallation
 	}
 
 	@DataBoundConstructor
-	public ConsuloInstallation(String name, String home, List<? extends ToolProperty<?>> properties)
+	public GWTInstallation(String name, String home, List<? extends ToolProperty<?>> properties)
 	{
 		super(name, home, properties);
 	}
