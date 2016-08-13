@@ -1,4 +1,4 @@
-# Instruction how setup project for building Consulo plugins
+# Instruction how setup project for building Consulo plugins in Jenkins
 
 ## Setup Jenkins
  * required 'Git' plugin
