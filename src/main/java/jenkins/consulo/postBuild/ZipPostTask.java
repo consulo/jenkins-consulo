@@ -44,7 +44,7 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 
 		public String getDisplayName()
 		{
-			return "Create artifacts from dist (Consulo)";
+			return "Create plugin artifacts (Consulo)";
 		}
 
 		@Override
@@ -82,7 +82,7 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 		List<FilePath> filePaths = distPath.listDirectories();
 		for(FilePath someArtifact : filePaths)
 		{
-			String artifactName = someArtifact.getName();
+			String artifactName = null;
 			FilePath[] libs = someArtifact.list("lib/*.jar");
 			mainLoop:
 			for(FilePath someJar : libs)
@@ -109,6 +109,11 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 				zipArchiveInputStream.close();
 			}
 
+
+			if(artifactName == null)
+			{
+				continue;
+			}
 
 			someArtifact.zip(distPath.child(artifactName + "_" + run.getId() + ".zip"));
 		}

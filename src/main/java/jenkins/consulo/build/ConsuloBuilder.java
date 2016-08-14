@@ -1,17 +1,27 @@
 package jenkins.consulo.build;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
 
 import net.sf.json.JSONObject;
 
+import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.StaplerRequest;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.JDK;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import jenkins.model.Jenkins;
 
 /**
  * @author VISTALL
@@ -33,7 +43,7 @@ public class ConsuloBuilder extends Builder
 		@Override
 		public String getDisplayName()
 		{
-			return "Invoke consulo project build";
+			return "Invoke cold";
 		}
 
 		@Override
@@ -46,6 +56,43 @@ public class ConsuloBuilder extends Builder
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException
 	{
-		return super.perform(build, launcher, listener);
+		FilePath workspace = build.getWorkspace();
+
+		FilePath outPath = workspace.child("out");
+		if(outPath.exists())
+		{
+			outPath.deleteRecursive();
+		}
+
+		JDK jdk = Jenkins.getInstance().getJDK("1.8");
+		if(jdk == null)
+		{
+			listener.error("'1.8' jdk required");
+			return false;
+		}
+		URL coldRunner = new URL("https://github.com/consulo/cold/raw/master/build/cold.jar");
+		URLConnection urlConnection = coldRunner.openConnection();
+
+		FilePath coldJar = workspace.createTempFile("cold", ".jar");
+
+		try (InputStream inputStream = urlConnection.getInputStream())
+		{
+			try (OutputStream write = coldJar.write())
+			{
+				IOUtils.copy(inputStream, write);
+			}
+		}
+
+		Launcher.ProcStarter procStarter = launcher.launch();
+		File java = new File(jdk.getBinDir(), launcher.isUnix() ? "java" : "java.exe");
+
+		procStarter.cmds(java, "-jar", coldJar.getName());
+		procStarter.pwd(workspace);
+		procStarter.stdout(listener);
+
+		Proc launch = launcher.launch(procStarter);
+		int join = launch.join();
+		coldJar.delete();
+		return join == 0;
 	}
 }
