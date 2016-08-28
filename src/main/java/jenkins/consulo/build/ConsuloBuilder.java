@@ -21,6 +21,7 @@ import hudson.model.BuildListener;
 import hudson.model.JDK;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.ArgumentListBuilder;
 import jenkins.model.Jenkins;
 
 /**
@@ -64,7 +65,9 @@ public class ConsuloBuilder extends Builder
 			outPath.deleteRecursive();
 		}
 
-		JDK jdk = Jenkins.getInstance().getJDK("1.8");
+		Jenkins jenkins = Jenkins.getInstance();
+
+		JDK jdk = jenkins.getJDK("1.8");
 		if(jdk == null)
 		{
 			listener.error("'1.8' jdk required");
@@ -86,7 +89,20 @@ public class ConsuloBuilder extends Builder
 		Launcher.ProcStarter procStarter = launcher.launch();
 		File java = new File(jdk.getBinDir(), launcher.isUnix() ? "java" : "java.exe");
 
-		procStarter.cmds(java, "-jar", coldJar.getName());
+		ArgumentListBuilder args = new ArgumentListBuilder();
+		args.add(java);
+
+		int i = 0;
+		for(JDK temp : jenkins.getJDKs())
+		{
+			String value = "JDK" + ";" + temp.getName() + ";" + temp.getHome();
+			args.addKeyValuePair(null, "cold.sdk." + (i ++), value, false);
+		}
+
+		args.add("-jar");
+		args.add(coldJar.getName());
+
+		procStarter.cmds(args);
 		procStarter.pwd(workspace);
 		procStarter.stdout(listener);
 
