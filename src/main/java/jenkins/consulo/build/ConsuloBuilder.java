@@ -96,8 +96,10 @@ public class ConsuloBuilder extends Builder
 		for(JDK temp : jenkins.getJDKs())
 		{
 			String value = "JDK" + ";" + temp.getName() + ";" + temp.getHome();
-			args.addKeyValuePair(null, "cold.sdk." + (i ++), value, false);
+			args.addKeyValuePair(null, "cold.sdk." + (i++), value, false);
 		}
+
+		args.addKeyValuePair(null, "cold.build.number", String.valueOf(build.getNumber()), false);
 
 		args.add("-jar");
 		args.add(coldJar.getName());
