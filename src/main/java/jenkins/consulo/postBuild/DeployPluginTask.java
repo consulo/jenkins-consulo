@@ -125,9 +125,10 @@ public class DeployPluginTask extends Notifier
 			postMethod.setRequestEntity(new InputStreamRequestEntity(child.open(), child.length(), "application/zip"));
 
 			HttpClient client = new HttpClient();
-			if(client.executeMethod(postMethod) != HttpServletResponse.SC_OK)
+			int i = client.executeMethod(postMethod);
+			if(i != HttpServletResponse.SC_OK)
 			{
-				throw new IOException("Failed to deploy artifact " + artifact.getDisplayPath());
+				throw new IOException("Failed to deploy artifact " + artifact.getDisplayPath() + ", Status Code: " + i);
 			}
 		}
 
