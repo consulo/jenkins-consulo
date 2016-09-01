@@ -22,9 +22,10 @@ package jenkins.consulo.postBuild;
  */
 public enum  PluginChannel
 {
-	release,
-	beta,
-	alpha,
+	release, // every month
+	beta,    // every week
+	alpha,   // every day
+	nightly, // every commit
 
 	internal
 }
