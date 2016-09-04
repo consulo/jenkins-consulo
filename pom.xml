@@ -1,39 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.jenkins-ci.plugins</groupId>
-    <artifactId>plugin</artifactId>
-    <version>2.13</version>
-    <relativePath/>
-  </parent>
-  <groupId>org.mustbe</groupId>
-  <artifactId>jenkins-consulo</artifactId>
-  <version>1.1</version>
-  <packaging>hpi</packaging>
+	<parent>
+		<groupId>org.jenkins-ci.plugins</groupId>
+		<artifactId>plugin</artifactId>
+		<version>2.13</version>
+		<relativePath/>
+	</parent>
+	<groupId>org.mustbe</groupId>
+	<artifactId>jenkins-consulo</artifactId>
+	<version>1.1</version>
+	<packaging>hpi</packaging>
 
-  <name>Consulo Integration Plugin (Internal)</name>
-  <description>TODO</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>
-  <licenses>
-    <license>
-      <name>Apache License 2.0</name>
-      <url>https://opensource.org/licenses/Apache-2.0</url>
-    </license>
-  </licenses>
+	<name>Consulo Integration Plugin (Internal)</name>
+	<description>TODO</description>
+	<url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>
+	<licenses>
+		<license>
+			<name>Apache License 2.0</name>
+			<url>https://opensource.org/licenses/Apache-2.0</url>
+		</license>
+	</licenses>
 
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
+	<dependencies>
+		<dependency>
+			<groupId>org.ostermiller</groupId>
+			<artifactId>utils</artifactId>
+			<version>1.07.00</version>
+		</dependency>
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>repo.jenkins-ci.org</id>
+			<url>http://repo.jenkins-ci.org/public/</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>repo.jenkins-ci.org</id>
+			<url>http://repo.jenkins-ci.org/public/</url>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
