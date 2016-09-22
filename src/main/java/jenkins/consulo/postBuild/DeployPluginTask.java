@@ -125,17 +125,17 @@ public class DeployPluginTask extends Notifier
 				throw new IOException(artifact.getDisplayPath() + " is not exists");
 			}
 
-			PutMethod postMethod = new PutMethod(repositoryUrl + "/deploy?channel=" + pluginChannel);
+			PutMethod putMethod = new PutMethod(repositoryUrl + "/deploy?channel=" + pluginChannel);
 			if(deployKey != null)
 			{
-				postMethod.setRequestHeader("Authorization", deployKey);
+				putMethod.setRequestHeader("Authorization", deployKey);
 			}
-			postMethod.setRequestEntity(new InputStreamRequestEntity(child.open(), child.length(), "application/zip"));
+			putMethod.setRequestEntity(new InputStreamRequestEntity(child.open(), child.length(), "application/zip"));
 
 			HttpClient client = new HttpClient();
 			client.getParams().setSoTimeout(5 * 60000);
 
-			int i = client.executeMethod(postMethod);
+			int i = client.executeMethod(putMethod);
 			if(i != HttpServletResponse.SC_OK)
 			{
 				throw new IOException("Failed to deploy artifact " + artifact.getDisplayPath() + ", Status Code: " + i);
