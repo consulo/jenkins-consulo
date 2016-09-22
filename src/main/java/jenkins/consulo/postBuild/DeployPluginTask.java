@@ -149,7 +149,7 @@ public class DeployPluginTask extends Notifier
 	{
 		try
 		{
-			File file = new File(System.getenv("user.home"), ".consuloWebservice/deploy.key");
+			File file = new File(System.getProperty("user.home"), ".consuloWebservice/deploy.key");
 
 			return file.exists() ? FileUtils.readFileToString(file, "UTF-8") : null;
 		}
