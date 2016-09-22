@@ -19,7 +19,9 @@ package jenkins.consulo.postBuild;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.AbstractMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
@@ -96,10 +98,12 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 		}
 
 		List<FilePath> filePaths = distPath.listDirectories();
-		for(FilePath someArtifact : filePaths)
+		for(FilePath pluginPath : filePaths)
 		{
-			String artifactName = null;
-			FilePath[] libs = someArtifact.list("lib/*.jar");
+			// pair ID + NAME
+			Map.Entry<String, String> pluginInfo = new AbstractMap.SimpleImmutableEntry<>(null, null);
+
+			FilePath[] libs = pluginPath.list("lib/*.jar");
 			mainLoop:
 			for(FilePath someJar : libs)
 			{
@@ -113,10 +117,10 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 					{
 						byte[] data = IOUtils.toByteArray(zipArchiveInputStream);
 
-						String pluginId = findPluginId(new ByteArrayInputStream(data));
-						if(pluginId != null)
+						Map.Entry<String, String> temp = findPluginId(new ByteArrayInputStream(data));
+						if(temp != null)
 						{
-							artifactName = pluginId;
+							pluginInfo = temp;
 						}
 
 						break mainLoop;
@@ -126,17 +130,35 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 			}
 
 
-			if(artifactName == null)
+			if(pluginInfo.getKey() == null && pluginInfo.getValue() == null)
 			{
-				continue;
+				throw new IOException("Path " + pluginPath + " is not plugin");
 			}
 
-			someArtifact.zip(distPath.child(artifactName + "_" + run.getId() + ".zip"));
+			if(pluginInfo.getKey() == null)
+			{
+				throw new IOException("Plugin with name: " + pluginInfo.getValue() + " don't have pluginId");
+			}
+
+			if(pluginInfo.getValue() == null)
+			{
+				throw new IOException("Plugin with id: " + pluginInfo.getKey() + " don't have pluginName");
+			}
+
+			if(!pluginInfo.getKey().equals(pluginPath.getName()))
+			{
+				throw new IOException(String.format("Plugin dir(%s) is not equal pluginId(%s)", pluginPath.getName(), pluginInfo.getKey()));
+			}
+
+			pluginPath.zip(distPath.child(pluginInfo.getKey() + "_" + run.getId() + ".zip"));
 		}
 	}
 
-	private static String findPluginId(InputStream inputStream) throws IOException
+	private static Map.Entry<String, String> findPluginId(InputStream inputStream) throws IOException
 	{
+		String id = null;
+		String name = null;
+
 		try
 		{
 			SAXReader reader = new SAXReader();
@@ -146,12 +168,12 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 			Element temp = rootElement.element("id");
 			if(temp != null)
 			{
-				return temp.getStringValue();
+				id = temp.getStringValue();
 			}
 			temp = rootElement.element("name");
 			if(temp != null)
 			{
-				return temp.getStringValue();
+				name = temp.getStringValue();
 			}
 		}
 		catch(DocumentException e)
@@ -159,6 +181,6 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 			throw new IOException(e);
 		}
 
-		return null;
+		return new AbstractMap.SimpleImmutableEntry<>(id, name);
 	}
 }
