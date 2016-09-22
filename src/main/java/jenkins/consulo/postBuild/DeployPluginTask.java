@@ -16,6 +16,7 @@
 
 package jenkins.consulo.postBuild;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.Extension;
 import hudson.Launcher;
@@ -110,6 +112,8 @@ public class DeployPluginTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
+		String deployKey = loadDeployKey();
+
 		VirtualFile root = build.pickArtifactManager().root();
 
 		List<? extends Run<?, ?>.Artifact> artifacts = build.getArtifacts();
@@ -122,9 +126,15 @@ public class DeployPluginTask extends Notifier
 			}
 
 			PutMethod postMethod = new PutMethod(repositoryUrl + "/deploy?channel=" + pluginChannel);
+			if(deployKey != null)
+			{
+				postMethod.setRequestHeader("Authorization", deployKey);
+			}
 			postMethod.setRequestEntity(new InputStreamRequestEntity(child.open(), child.length(), "application/zip"));
 
 			HttpClient client = new HttpClient();
+			client.getParams().setSoTimeout(5 * 60000);
+
 			int i = client.executeMethod(postMethod);
 			if(i != HttpServletResponse.SC_OK)
 			{
@@ -133,5 +143,19 @@ public class DeployPluginTask extends Notifier
 		}
 
 		return true;
+	}
+
+	private static String loadDeployKey()
+	{
+		try
+		{
+			File file = new File(System.getenv("user.home"), ".consuloWebservice/deploy.key");
+
+			return file.exists() ? FileUtils.readFileToString(file, "UTF-8") : null;
+		}
+		catch(Exception e)
+		{
+			return null;
+		}
 	}
 }
