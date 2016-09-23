@@ -2,6 +2,7 @@
 
 ## Setup Jenkins
  * required 'Git' plugin
+ * required 'Github' plugin
  * required 'Consulo Integration Plugin' (this repo)
 
 ## Creating project
