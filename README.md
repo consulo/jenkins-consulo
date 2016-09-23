@@ -18,4 +18,5 @@
     * trait this artifacts as Jenkins artifact
     * deploy plugin to plugin manager
     * set build status to commit at github
+
    ![](http://klikr.org/a4d5437d448d7c21a35d0e0faf26.png)
