@@ -18,13 +18,18 @@ package jenkins.consulo.postBuild;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.Extension;
@@ -77,14 +82,23 @@ public class DeployPluginTask extends Notifier
 		}
 	}
 
-	private String repositoryUrl;
-	private String pluginChannel;
+	private static final String ourDefaultPluginUrl = "https://hub.consulo.io/api/plugins";
+
+	private final boolean enableRepositoryUrl;
+	private final String repositoryUrl;
+	private final String pluginChannel;
 
 	@DataBoundConstructor
-	public DeployPluginTask(String repositoryUrl, String pluginChannel)
+	public DeployPluginTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel)
 	{
 		this.repositoryUrl = repositoryUrl;
+		this.enableRepositoryUrl = enableRepositoryUrl;
 		this.pluginChannel = pluginChannel;
+	}
+
+	public boolean isEnableRepositoryUrl()
+	{
+		return enableRepositoryUrl;
 	}
 
 	public String getRepositoryUrl()
@@ -116,6 +130,8 @@ public class DeployPluginTask extends Notifier
 
 		VirtualFile root = build.pickArtifactManager().root();
 
+		String repoUrl = enableRepositoryUrl ? repositoryUrl : ourDefaultPluginUrl;
+
 		List<? extends Run<?, ?>.Artifact> artifacts = build.getArtifacts();
 		for(Run.Artifact artifact : artifacts)
 		{
@@ -125,17 +141,25 @@ public class DeployPluginTask extends Notifier
 				throw new IOException(artifact.getDisplayPath() + " is not exists");
 			}
 
-			PutMethod putMethod = new PutMethod(repositoryUrl + "/deploy?channel=" + pluginChannel);
+			PostMethod postMethod = new PostMethod(repoUrl + "/deploy?channel=" + pluginChannel);
 			if(deployKey != null)
 			{
-				putMethod.setRequestHeader("Authorization", deployKey);
+				postMethod.setRequestHeader("Authorization", deployKey);
 			}
-			putMethod.setRequestEntity(new InputStreamRequestEntity(child.open(), child.length(), "application/zip"));
+
+			InputStream inputStream = child.open();
+			Part[] parts = {
+					new FilePart("file", new ByteArrayPartSource(child.getName(), IOUtils.toByteArray(inputStream))),
+			};
+			inputStream.close();
+
+			MultipartRequestEntity entity = new MultipartRequestEntity(parts, postMethod.getParams());
+			postMethod.setRequestEntity(entity);
 
 			HttpClient client = new HttpClient();
 			client.getParams().setSoTimeout(5 * 60000);
 
-			int i = client.executeMethod(putMethod);
+			int i = client.executeMethod(postMethod);
 			if(i != HttpServletResponse.SC_OK)
 			{
 				throw new IOException("Failed to deploy artifact " + artifact.getDisplayPath() + ", Status Code: " + i);

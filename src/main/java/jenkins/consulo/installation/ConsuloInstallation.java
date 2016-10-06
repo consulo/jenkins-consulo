@@ -64,7 +64,10 @@ public class ConsuloInstallation extends ToolInstallation
 			File ideaJar = new File(value, "lib/idea.jar");
 			if(!ideaJar.exists())
 			{
-				return FormValidation.error("Not Consulo Directory");
+				if(!new File(value, "lib/consulo-resources.jar").exists())
+				{
+					return FormValidation.error("Not Consulo Directory");
+				}
 			}
 
 			return FormValidation.ok();

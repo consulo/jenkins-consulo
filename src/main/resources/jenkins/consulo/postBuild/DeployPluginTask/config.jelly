@@ -18,12 +18,17 @@
 
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
-	<f:entry title="Repository URL" field="repositoryUrl">
-		<f:textbox default="http://must-be.org/api/v2/consulo/plugins"/>
-	</f:entry>
+	<f:block>
+		<table>
+			<f:optionalBlock title="Use custom plugin repostiry" field="enableRepositoryUrl" inline="true">
+				<f:entry title="URL">
+					<f:textbox field="repositoryUrl"/>
+				</f:entry>
+			</f:optionalBlock>
 
-	<f:entry title="Channel" field="pluginChannel">
-		<f:select default="nightly"/>
-	</f:entry>
-
+			<f:entry title="Channel" field="pluginChannel">
+				<f:select default="nightly"/>
+			</f:entry>
+		</table>
+	</f:block>
 </j:jelly>
