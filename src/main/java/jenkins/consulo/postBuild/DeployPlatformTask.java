@@ -19,6 +19,8 @@ package jenkins.consulo.postBuild;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -50,7 +52,7 @@ import jenkins.util.VirtualFile;
  * @author VISTALL
  * @since 29-Aug-16
  */
-public class DeployPluginTask extends Notifier
+public class DeployPlatformTask extends Notifier
 {
 	@Extension
 	public static class DescriptorImpl extends BuildStepDescriptor<Publisher>
@@ -62,7 +64,7 @@ public class DeployPluginTask extends Notifier
 
 		public String getDisplayName()
 		{
-			return "Deploy plugin artifacts to repository (Consulo)";
+			return "Deploy platform artifacts to repository (Consulo)";
 		}
 
 		public boolean isApplicable(Class<? extends AbstractProject> jobType)
@@ -86,8 +88,10 @@ public class DeployPluginTask extends Notifier
 	private final String repositoryUrl;
 	private final String pluginChannel;
 
+	private static final Collection<String> ourAllowedArtifacts = Arrays.asList("consulo-win-no-jre.tar.gz", "consulo-linux-no-jre.tar.gz", "consulo-mac-no-jre.tar.gz");
+
 	@DataBoundConstructor
-	public DeployPluginTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel)
+	public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel)
 	{
 		this.repositoryUrl = repositoryUrl;
 		this.enableRepositoryUrl = enableRepositoryUrl;
@@ -139,7 +143,12 @@ public class DeployPluginTask extends Notifier
 				throw new IOException(artifact.getDisplayPath() + " is not exists");
 			}
 
-			PostMethod postMethod = new PostMethod(repoUrl + "pluginDeploy?channel=" + pluginChannel);
+			if(!ourAllowedArtifacts.contains(artifact.getFileName()))
+			{
+				continue;
+			}
+
+			PostMethod postMethod = new PostMethod(repoUrl + "platformDeploy?channel=" + pluginChannel + "&platformVersion=" + build.getNumber());
 			if(deployKey != null)
 			{
 				postMethod.setRequestHeader("Authorization", deployKey);
