@@ -1,4 +1,4 @@
-# Instruction how setup project for building Consulo and/or plugins in Jenkins
+# Instruction how setup project for building Consulo and/or plugins in Jenkins [![Build Status](https://ci.consulo.io/buildStatus/icon?job=jenkins-consulo)](https://ci.consulo.io/view/consulo-webservices/job/jenkins-consulo/)
 
 ## Setup Jenkins
  * required 'Git' plugin
