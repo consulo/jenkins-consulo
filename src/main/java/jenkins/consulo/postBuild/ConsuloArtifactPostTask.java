@@ -132,7 +132,7 @@ public class ConsuloArtifactPostTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
-		Generator generator = new Generator(distDir, targetDir, listener);
+		Generator generator = new Generator(distDir, targetDir, build.getNumber(), listener);
 
 		try
 		{

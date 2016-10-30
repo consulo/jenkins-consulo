@@ -66,14 +66,18 @@ public class Generator
 			"jdk/Contents/Home/src.zip",
 	};
 
+	private static final String ourBuildSNAPSHOT = "buildSNAPSHOT";
+
 	private FilePath myDistPath;
 	private FilePath myTargetDir;
+	private int myBuildNumber;
 	private BuildListener myListener;
 
-	public Generator(FilePath distPath, FilePath targetDir, BuildListener listener)
+	public Generator(FilePath distPath, FilePath targetDir, int buildNumber, BuildListener listener)
 	{
 		myDistPath = distPath;
 		myTargetDir = targetDir;
+		myBuildNumber = buildNumber;
 		myListener = listener;
 	}
 
@@ -135,7 +139,7 @@ public class Generator
 								// is our path
 								if(!mac && name.startsWith("jre/"))
 								{
-									final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo/" + name, tempEntry);
+									final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo/platform/buildSNAPSHOT/" + name, tempEntry);
 									jdkEntry.setMode(extractMode(tempEntry));
 									jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
 
@@ -222,13 +226,24 @@ public class Generator
 		archiveOutputStream.closeArchiveEntry();
 	}
 
-	private static ArchiveEntryWrapper createEntry(String type, String name, ArchiveEntry tempEntry)
+	private ArchiveEntryWrapper createEntry(String type, String name, ArchiveEntry tempEntry)
 	{
+		name = replaceBuildDirectory(name);
+
 		if(type.equals(ArchiveStreamFactory.TAR))
 		{
 			return new ArchiveEntryWrapper.Tar(name, tempEntry);
 		}
 		return new ArchiveEntryWrapper.Zip(name);
+	}
+
+	private String replaceBuildDirectory(String entryName)
+	{
+		if(entryName.contains(ourBuildSNAPSHOT))
+		{
+			return entryName.replace(ourBuildSNAPSHOT, "build" + myBuildNumber);
+		}
+		return entryName;
 	}
 
 	private OutputStream createOutputStream(String type, String prefix) throws Exception
