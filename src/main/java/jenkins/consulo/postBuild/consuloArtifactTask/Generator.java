@@ -49,9 +49,9 @@ public class Generator
 	private static final String[] ourExecutable = new String[]{
 			// linux
 			"Consulo/consulo.sh",
-			"Consulo/platform/buildSNAPSHOT/launcher.sh",
-			"Consulo/platform/bin/fsnotifier",
-			"Consulo/platform/bin/fsnotifier64",
+			"Consulo/platform/buildSNAPSHOT/bin/launcher.sh",
+			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier",
+			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier64",
 			// mac
 			"Consulo.app/Contents/bin/fsnotifier",
 			"Consulo.app/Contents/bin/restarter",
