@@ -32,6 +32,7 @@ import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
@@ -95,6 +96,10 @@ public class Generator
 		try (OutputStream pathStream = createOutputStream(archiveOutType, path))
 		{
 			ArchiveOutputStream archiveOutputStream = factory.createArchiveOutputStream(archiveOutType, pathStream);
+			if(archiveOutputStream instanceof TarArchiveOutputStream)
+			{
+				((TarArchiveOutputStream) archiveOutputStream).setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
+			}
 
 			// move Consulo to archive, and change permissions
 			try (InputStream is = fileZip.read())
