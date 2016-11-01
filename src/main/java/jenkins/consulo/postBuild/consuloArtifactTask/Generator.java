@@ -53,8 +53,8 @@ public class Generator
 			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier",
 			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier64",
 			// mac
-			"Consulo.app/Contents/bin/fsnotifier",
-			"Consulo.app/Contents/bin/restarter",
+			"Consulo.app/Contents/buildSNAPSHOT/bin/fsnotifier",
+			"Consulo.app/Contents/buildSNAPSHOT/bin/restarter",
 			"Consulo.app/Contents/MacOS/consulo",
 	};
 
@@ -159,7 +159,7 @@ public class Generator
 
 									if(needAddToArchive)
 									{
-										final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo.app/Contents/jre/" + name, tempEntry);
+										final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo.app/Contents/platform/buildSNAPSHOT/jre/" + name, tempEntry);
 										jdkEntry.setMode(extractMode(tempEntry));
 										jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
 
