@@ -128,7 +128,7 @@ public class DeployPluginTask extends Notifier
 
 		VirtualFile root = build.pickArtifactManager().root();
 
-		String repoUrl = enableRepositoryUrl ? repositoryUrl : Urls.defaultRepositoryUrl;
+		String repoUrl = enableRepositoryUrl ? repositoryUrl : Urls.ourDefaultRepositoryUrl;
 
 		List<? extends Run<?, ?>.Artifact> artifacts = build.getArtifacts();
 		for(Run.Artifact artifact : artifacts)

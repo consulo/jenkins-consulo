@@ -22,5 +22,5 @@ package jenkins.consulo.postBuild;
  */
 public interface Urls
 {
-	String defaultRepositoryUrl = "https://hub.consulo.io/api/repository/";
+	String ourDefaultRepositoryUrl = "https://hub.consulo.io/api/repository/";
 }

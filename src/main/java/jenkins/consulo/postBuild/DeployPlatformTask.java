@@ -88,7 +88,15 @@ public class DeployPlatformTask extends Notifier
 	private final String repositoryUrl;
 	private final String pluginChannel;
 
-	private static final Collection<String> ourAllowedArtifacts = Arrays.asList("consulo-win-no-jre.tar.gz", "consulo-linux-no-jre.tar.gz", "consulo-mac-no-jre.tar.gz");
+	private static final Collection<String> ourAllowedArtifacts = Arrays.asList(
+			"consulo-win-no-jre.tar.gz",
+			"consulo-win.tar.gz",
+			"consulo-win64.tar.gz",
+			"consulo-linux-no-jre.tar.gz",
+			"consulo-linux.tar.gz",
+			"consulo-linux64.tar.gz",
+			"consulo-mac-no-jre.tar.gz",
+			"consulo-mac64.tar.gz");
 
 	@DataBoundConstructor
 	public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel)
@@ -132,7 +140,7 @@ public class DeployPlatformTask extends Notifier
 
 		VirtualFile root = build.pickArtifactManager().root();
 
-		String repoUrl = enableRepositoryUrl ? repositoryUrl : Urls.defaultRepositoryUrl;
+		String repoUrl = enableRepositoryUrl ? repositoryUrl : Urls.ourDefaultRepositoryUrl;
 
 		List<? extends Run<?, ?>.Artifact> artifacts = build.getArtifacts();
 		for(Run.Artifact artifact : artifacts)

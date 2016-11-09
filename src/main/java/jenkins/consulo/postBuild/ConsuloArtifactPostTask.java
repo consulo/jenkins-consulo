@@ -136,12 +136,15 @@ public class ConsuloArtifactPostTask extends Notifier
 
 		try
 		{
-			// win
+			// win no jre
 			generator.buildDistributionInArchive("consulo-win.zip", null, "consulo-win-no-jre", ArchiveStreamFactory.ZIP);
-			// we need this for platformDeploy
-			generator.buildDistributionInArchive("consulo-win.zip", null, "consulo-win-no-jre", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive("consulo-win.zip", null, "consulo-win-no-jre", ArchiveStreamFactory.TAR);  // archive for platformDeploy
+			// win 32 bit
 			generator.buildDistributionInArchive("consulo-win.zip", winJre32Path, "consulo-win", ArchiveStreamFactory.ZIP);
+			generator.buildDistributionInArchive("consulo-win.zip", winJre32Path, "consulo-win", ArchiveStreamFactory.TAR); // archive for platformDeploy
+			// win 64 bit
 			generator.buildDistributionInArchive("consulo-win.zip", winJre64Path, "consulo-win64", ArchiveStreamFactory.ZIP);
+			generator.buildDistributionInArchive("consulo-win.zip", winJre64Path, "consulo-win64", ArchiveStreamFactory.TAR); // archive for platformDeploy
 
 			// linux
 			generator.buildDistributionInArchive("consulo-linux.zip", null, "consulo-linux-no-jre", ArchiveStreamFactory.TAR);
