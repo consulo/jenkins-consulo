@@ -177,7 +177,7 @@ public class DeployPlatformTask extends Notifier
 			int i = client.executeMethod(postMethod);
 			if(i != HttpServletResponse.SC_OK)
 			{
-				throw new IOException("Failed to deploy artifact " + artifact.getDisplayPath() + ", Status Code: " + i);
+				throw new IOException("Failed to deploy artifact " + artifact.getDisplayPath() + ", Status Code: " + i + ", Status Text: " + postMethod.getStatusText());
 			}
 		}
 
