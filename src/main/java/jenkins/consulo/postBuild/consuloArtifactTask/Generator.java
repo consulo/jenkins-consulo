@@ -54,8 +54,9 @@ public class Generator
 			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier",
 			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier64",
 			// mac
-			"Consulo.app/Contents/buildSNAPSHOT/bin/fsnotifier",
-			"Consulo.app/Contents/buildSNAPSHOT/bin/restarter",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/fsnotifier",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/restarter",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/printenv.py",
 			"Consulo.app/Contents/MacOS/consulo",
 	};
 
