@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -35,18 +34,17 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
-import hudson.model.Run;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.ListBoxModel;
-import jenkins.util.VirtualFile;
 
 /**
  * @author VISTALL
@@ -88,15 +86,8 @@ public class DeployPlatformTask extends Notifier
 	private final String repositoryUrl;
 	private final String pluginChannel;
 
-	private static final Collection<String> ourAllowedArtifacts = Arrays.asList(
-			"consulo-win-no-jre.tar.gz",
-			"consulo-win.tar.gz",
-			"consulo-win64.tar.gz",
-			"consulo-linux-no-jre.tar.gz",
-			"consulo-linux.tar.gz",
-			"consulo-linux64.tar.gz",
-			"consulo-mac-no-jre.tar.gz",
-			"consulo-mac64.tar.gz");
+	private static final Collection<String> ourAllowedArtifacts = Arrays.asList("consulo-win-no-jre.tar.gz", "consulo-win.tar.gz", "consulo-win64.tar.gz", "consulo-linux-no-jre.tar.gz",
+			"consulo-linux.tar.gz", "consulo-linux64.tar.gz", "consulo-mac-no-jre.tar.gz", "consulo-mac64.tar.gz");
 
 	@DataBoundConstructor
 	public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel)
@@ -138,20 +129,19 @@ public class DeployPlatformTask extends Notifier
 
 		String deployKey = loadDeployKey();
 
-		VirtualFile root = build.pickArtifactManager().root();
+		FilePath workspace = build.getWorkspace();
+		FilePath allArtifactsDir = workspace.child("out/artifacts/all");
+		if(!allArtifactsDir.exists())
+		{
+			throw new IOException("No artifacts");
+		}
 
 		String repoUrl = enableRepositoryUrl ? repositoryUrl : Urls.ourDefaultRepositoryUrl;
 
-		List<? extends Run<?, ?>.Artifact> artifacts = build.getArtifacts();
-		for(Run.Artifact artifact : artifacts)
+		int artifactCount = 0;
+		for(FilePath artifactPath : allArtifactsDir.list())
 		{
-			VirtualFile child = root.child(artifact.relativePath);
-			if(!child.exists())
-			{
-				throw new IOException(artifact.getDisplayPath() + " is not exists");
-			}
-
-			if(!ourAllowedArtifacts.contains(artifact.getFileName()))
+			if(!ourAllowedArtifacts.contains(artifactPath.getName()))
 			{
 				continue;
 			}
@@ -162,11 +152,11 @@ public class DeployPlatformTask extends Notifier
 				postMethod.setRequestHeader("Authorization", deployKey);
 			}
 
-			InputStream inputStream = child.open();
+			InputStream inputStream = artifactPath.read();
 			Part[] parts = {
-					new FilePart("file", new ByteArrayPartSource(child.getName(), IOUtils.toByteArray(inputStream))),
+					new FilePart("file", new ByteArrayPartSource(artifactPath.getName(), IOUtils.toByteArray(inputStream))),
 			};
-			inputStream.close();
+			IOUtils.closeQuietly(inputStream);
 
 			MultipartRequestEntity entity = new MultipartRequestEntity(parts, postMethod.getParams());
 			postMethod.setRequestEntity(entity);
@@ -177,12 +167,17 @@ public class DeployPlatformTask extends Notifier
 			int i = client.executeMethod(postMethod);
 			if(i != HttpServletResponse.SC_OK)
 			{
-				throw new IOException("Failed to deploy artifact " + artifact.getDisplayPath() + ", Status Code: " + i + ", Status Text: " + postMethod.getStatusText());
+				throw new IOException("Failed to deploy artifact " + artifactPath.getName() + ", Status Code: " + i + ", Status Text: " + postMethod.getStatusText());
 			}
-			String json = postMethod.getResponseBodyAsString();
-			listener.getLogger().println("Deploy finished. JSON: " + json);
+			listener.getLogger().println("Deployed artifact: " + artifactPath.getName());
+
+			artifactCount++;
 		}
 
+		if(artifactCount == 0)
+		{
+			throw new IOException("No artifacts for deploy");
+		}
 		return true;
 	}
 
