@@ -179,6 +179,8 @@ public class DeployPlatformTask extends Notifier
 			{
 				throw new IOException("Failed to deploy artifact " + artifact.getDisplayPath() + ", Status Code: " + i + ", Status Text: " + postMethod.getStatusText());
 			}
+			String json = postMethod.getResponseBodyAsString();
+			listener.getLogger().println("Deploy finished. JSON: " + json);
 		}
 
 		return true;
