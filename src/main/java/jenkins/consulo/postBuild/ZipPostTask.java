@@ -84,7 +84,7 @@ public class ZipPostTask extends Recorder implements SimpleBuildStep
 	@Override
 	public BuildStepMonitor getRequiredMonitorService()
 	{
-		return BuildStepMonitor.NONE;
+		return BuildStepMonitor.BUILD;
 	}
 
 	@Override

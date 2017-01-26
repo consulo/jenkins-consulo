@@ -102,7 +102,7 @@ public class ConsuloArtifactPostTask extends Notifier
 	@Override
 	public BuildStepMonitor getRequiredMonitorService()
 	{
-		return BuildStepMonitor.NONE;
+		return BuildStepMonitor.BUILD;
 	}
 
 	@Override
