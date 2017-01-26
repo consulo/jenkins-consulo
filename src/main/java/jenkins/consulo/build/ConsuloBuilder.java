@@ -22,10 +22,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.StaplerRequest;
 import hudson.Extension;
 import hudson.FilePath;
@@ -35,9 +39,14 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.JDK;
+import hudson.model.Node;
+import hudson.slaves.NodeProperty;
+import hudson.slaves.NodePropertyDescriptor;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.tools.ToolLocationNodeProperty;
 import hudson.util.ArgumentListBuilder;
+import hudson.util.DescribableList;
 import jenkins.model.Jenkins;
 
 /**
@@ -81,9 +90,9 @@ public class ConsuloBuilder extends Builder
 			outPath.deleteRecursive();
 		}
 
-		Jenkins jenkins = Jenkins.getInstance();
+		Map<String, String> tools = findAllTools(build);
 
-		JDK jdk = jenkins.getJDK("1.8");
+		String jdk = tools.get("1.8");
 		if(jdk == null)
 		{
 			listener.error("'1.8' jdk required");
@@ -103,18 +112,17 @@ public class ConsuloBuilder extends Builder
 		}
 
 		Launcher.ProcStarter procStarter = launcher.launch();
-		File java = new File(jdk.getBinDir(), launcher.isUnix() ? "java" : "java.exe");
+		File java = new File(new File(jdk, "bin"), launcher.isUnix() ? "java" : "java.exe");
 
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(java);
 
 		int i = 0;
-		for(JDK temp : jenkins.getJDKs())
+		for(Map.Entry<String, String> entry : tools.entrySet())
 		{
-			String value = "JDK" + ";" + temp.getName() + ";" + temp.getHome();
+			String value = "JDK" + ";" + entry.getKey() + ";" + entry.getValue();
 			args.addKeyValuePair(null, "cold.sdk." + (i++), value, false);
 		}
-
 		args.addKeyValuePair(null, "cold.build.number", String.valueOf(build.getNumber()), false);
 
 		args.add("-jar");
@@ -128,5 +136,34 @@ public class ConsuloBuilder extends Builder
 		int join = launch.join();
 		coldJar.delete();
 		return join == 0;
+	}
+
+	private static Map<String, String> findAllTools(AbstractBuild<?, ?> build)
+	{
+		Map<String, String> map = new HashMap<>();
+		Node currentNode = build.getBuiltOn();
+		DescribableList<NodeProperty<?>, NodePropertyDescriptor> properties = currentNode.getNodeProperties();
+		ToolLocationNodeProperty toolLocation = properties.get(ToolLocationNodeProperty.class);
+		if(toolLocation != null)
+		{
+			List<ToolLocationNodeProperty.ToolLocation> locations = toolLocation.getLocations();
+			for(ToolLocationNodeProperty.ToolLocation location : locations)
+			{
+				if(StringUtils.isNotBlank(location.getHome()))
+				{
+					map.put(location.getName(), location.getHome());
+				}
+			}
+		}
+
+		if(currentNode instanceof Jenkins)
+		{
+			List<JDK> jdks = ((Jenkins) currentNode).getJDKs();
+			for(JDK jdk : jdks)
+			{
+				map.put(jdk.getName(), jdk.getHome());
+			}
+		}
+		return map;
 	}
 }
