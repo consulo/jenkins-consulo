@@ -9,9 +9,9 @@
 		<version>2.13</version>
 		<relativePath/>
 	</parent>
-	<groupId>org.mustbe</groupId>
-	<artifactId>jenkins-consulo</artifactId>
-	<version>1.1</version>
+	<groupId>consulo</groupId>
+	<artifactId>jenkins-cold</artifactId>
+	<version>1.2</version>
 	<packaging>hpi</packaging>
 
 	<name>Consulo Integration Plugin (Internal)</name>

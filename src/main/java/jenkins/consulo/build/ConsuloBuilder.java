@@ -26,11 +26,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONObject;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -71,12 +69,19 @@ public class ConsuloBuilder extends Builder
 		{
 			return "Invoke cold";
 		}
+	}
 
-		@Override
-		public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException
-		{
-			return new ConsuloBuilder();
-		}
+	private final boolean buildPluginArtifacts;
+
+	@DataBoundConstructor
+	public ConsuloBuilder(boolean buildPluginArtifacts)
+	{
+		this.buildPluginArtifacts = buildPluginArtifacts;
+	}
+
+	public boolean isBuildPluginArtifacts()
+	{
+		return buildPluginArtifacts;
 	}
 
 	@Override
@@ -127,6 +132,10 @@ public class ConsuloBuilder extends Builder
 
 		args.add("-jar");
 		args.add(coldJar.getName());
+		if(isBuildPluginArtifacts())
+		{
+			args.add("--build-plugin-artifacts");
+		}
 
 		procStarter.cmds(args);
 		procStarter.pwd(workspace);
