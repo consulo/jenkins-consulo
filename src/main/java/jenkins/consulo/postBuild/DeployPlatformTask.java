@@ -83,6 +83,7 @@ public class DeployPlatformTask extends Notifier
 	}
 
 	private final boolean enableRepositoryUrl;
+	private final boolean allowUnstable;
 	private final String repositoryUrl;
 	private final String pluginChannel;
 
@@ -90,11 +91,17 @@ public class DeployPlatformTask extends Notifier
 			"consulo-linux.tar.gz", "consulo-linux64.tar.gz", "consulo-mac-no-jre.tar.gz", "consulo-mac64.tar.gz");
 
 	@DataBoundConstructor
-	public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel)
+	public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel, boolean allowUnstable)
 	{
 		this.repositoryUrl = repositoryUrl;
 		this.enableRepositoryUrl = enableRepositoryUrl;
 		this.pluginChannel = pluginChannel;
+		this.allowUnstable = allowUnstable;
+	}
+
+	public boolean isAllowUnstable()
+	{
+		return allowUnstable;
 	}
 
 	public boolean isEnableRepositoryUrl()
@@ -122,7 +129,7 @@ public class DeployPlatformTask extends Notifier
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException
 	{
 		Result result = build.getResult();
-		if(result == null || result.isWorseThan(Result.UNSTABLE))
+		if(result == null || (allowUnstable ? result.isWorseThan(Result.UNSTABLE) : result.isWorseOrEqualTo(Result.UNSTABLE)))
 		{
 			throw new IOException("Project is not build");
 		}

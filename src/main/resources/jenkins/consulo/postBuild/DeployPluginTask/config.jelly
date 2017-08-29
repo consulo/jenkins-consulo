@@ -29,6 +29,8 @@
 			<f:entry title="Channel" field="pluginChannel">
 				<f:select default="nightly"/>
 			</f:entry>
+
+			<f:checkbox title="Allow unstable build?" field="allowUnstable"/>
 		</table>
 	</f:block>
 </j:jelly>
