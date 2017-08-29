@@ -37,7 +37,7 @@ public class ArtifactPaths
 		// maven project
 		if(workspace.child("pom.xml").exists())
 		{
-			int number = build.getNumber();
+			String number = "2-SNAPSHOT";//String.valueOf(build.getNumber());
 			String win = "consulo-bundle-" + number + "-win.zip";
 			String linux = "consulo-bundle-" + number + "-linux.zip";
 			String mac = "consulo-bundle-" + number + "-mac.zip";
