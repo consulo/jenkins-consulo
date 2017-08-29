@@ -114,9 +114,12 @@ public class ConsuloArtifactPostTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
+		ArtifactPaths artifactPaths = ArtifactPaths.find(build);
+
 		FilePath workspace = build.getWorkspace();
 
-		FilePath targetDir = workspace.child("out/artifacts/all");
+		FilePath targetDir = workspace.child(artifactPaths.getAllArtifactsPath());
+
 		if(targetDir.exists())
 		{
 			targetDir.deleteContents();
@@ -126,7 +129,7 @@ public class ConsuloArtifactPostTask extends Notifier
 			targetDir.mkdirs();
 		}
 
-		FilePath distDir = workspace.child("out/artifacts/dist");
+		FilePath distDir = workspace.child(artifactPaths.getRawArtifactsPath());
 		if(!distDir.exists())
 		{
 			throw new IOException("Project is not build");
@@ -137,23 +140,23 @@ public class ConsuloArtifactPostTask extends Notifier
 		try
 		{
 			// win no jre
-			generator.buildDistributionInArchive("consulo-win.zip", null, "consulo-win-no-jre", ArchiveStreamFactory.ZIP);
-			generator.buildDistributionInArchive("consulo-win.zip", null, "consulo-win-no-jre", ArchiveStreamFactory.TAR);  // archive for platformDeploy
+			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo-win-no-jre", ArchiveStreamFactory.ZIP);
+			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo-win-no-jre", ArchiveStreamFactory.TAR);  // archive for platformDeploy
 			// win 32 bit
-			generator.buildDistributionInArchive("consulo-win.zip", winJre32Path, "consulo-win", ArchiveStreamFactory.ZIP);
-			generator.buildDistributionInArchive("consulo-win.zip", winJre32Path, "consulo-win", ArchiveStreamFactory.TAR); // archive for platformDeploy
+			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo-win", ArchiveStreamFactory.ZIP);
+			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo-win", ArchiveStreamFactory.TAR); // archive for platformDeploy
 			// win 64 bit
-			generator.buildDistributionInArchive("consulo-win.zip", winJre64Path, "consulo-win64", ArchiveStreamFactory.ZIP);
-			generator.buildDistributionInArchive("consulo-win.zip", winJre64Path, "consulo-win64", ArchiveStreamFactory.TAR); // archive for platformDeploy
+			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo-win64", ArchiveStreamFactory.ZIP);
+			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo-win64", ArchiveStreamFactory.TAR); // archive for platformDeploy
 
 			// linux
-			generator.buildDistributionInArchive("consulo-linux.zip", null, "consulo-linux-no-jre", ArchiveStreamFactory.TAR);
-			generator.buildDistributionInArchive("consulo-linux.zip", linuxJre32Path, "consulo-linux", ArchiveStreamFactory.TAR);
-			generator.buildDistributionInArchive("consulo-linux.zip", linuxJre64Path, "consulo-linux64", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getLinux(), null, "consulo-linux-no-jre", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre32Path, "consulo-linux", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre64Path, "consulo-linux64", ArchiveStreamFactory.TAR);
 
 			// mac
-			generator.buildDistributionInArchive("consulo-mac.zip", null, "consulo-mac-no-jre", ArchiveStreamFactory.TAR);
-			generator.buildDistributionInArchive("consulo-mac.zip", macJre64Path, "consulo-mac64", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getMac(), null, "consulo-mac-no-jre", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getMac(), macJre64Path, "consulo-mac64", ArchiveStreamFactory.TAR);
 		}
 		catch(Exception throwable)
 		{
