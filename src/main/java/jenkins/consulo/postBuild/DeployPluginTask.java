@@ -19,6 +19,7 @@ package jenkins.consulo.postBuild;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -34,6 +35,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.maven.MavenModule;
+import hudson.maven.MavenModuleSet;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -130,45 +133,55 @@ public class DeployPluginTask extends Notifier
 		}
 
 		String deployKey = loadDeployKey();
+		String repoUrl = enableRepositoryUrl ? repositoryUrl : Urls.ourDefaultRepositoryUrl;
+		int artifactCount = 0;
 
 		FilePath workspace = build.getWorkspace();
-		FilePath allArtifactsDir = workspace.child("out/artifacts/dist");
-		if(!allArtifactsDir.exists())
+		if(workspace == null)
 		{
-			throw new IOException("No artifacts");
+			throw new IOException("Workspace is null");
 		}
 
-		String repoUrl = enableRepositoryUrl ? repositoryUrl : Urls.ourDefaultRepositoryUrl;
-
-		int artifactCount = 0;
-		for(FilePath artifactPath : allArtifactsDir.list("*.zip"))
+		AbstractProject<?, ?> project = build.getProject();
+		if(project instanceof MavenModuleSet)
 		{
-			PostMethod postMethod = new PostMethod(repoUrl + "pluginDeploy?channel=" + pluginChannel);
-			if(deployKey != null)
+			listener.getLogger().println("Deploying mavenize plugins");
+
+			Collection<MavenModule> modules = ((MavenModuleSet) project).getModules();
+			for(MavenModule module : modules)
 			{
-				postMethod.setRequestHeader("Authorization", deployKey);
+				if(module.isDisabled())
+				{
+					continue;
+				}
+
+				String packaging = module.getPackaging();
+
+				if("consulo-plugin".equals(packaging))
+				{
+					FilePath targetDirectory = workspace.child(module.getRelativePath().isEmpty() ? "target" : (module.getRelativePath() + "/target"));
+					if(targetDirectory.exists())
+					{
+						for(FilePath artifactPath : targetDirectory.list("*.consulo-plugin"))
+						{
+							artifactCount += deployPlugin(repoUrl, pluginChannel, deployKey, artifactPath, listener, artifactCount);
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			FilePath allArtifactsDir = workspace.child("out/artifacts/dist");
+			if(!allArtifactsDir.exists())
+			{
+				throw new IOException("No artifacts");
 			}
 
-			InputStream inputStream = artifactPath.read();
-			Part[] parts = {
-					new FilePart("file", new ByteArrayPartSource(artifactPath.getName(), IOUtils.toByteArray(inputStream))),
-			};
-			IOUtils.closeQuietly(inputStream);
-
-			MultipartRequestEntity entity = new MultipartRequestEntity(parts, postMethod.getParams());
-			postMethod.setRequestEntity(entity);
-
-			HttpClient client = new HttpClient();
-			client.getParams().setSoTimeout(5 * 60000);
-
-			int i = client.executeMethod(postMethod);
-			if(i != HttpServletResponse.SC_OK)
+			for(FilePath artifactPath : allArtifactsDir.list("*.zip"))
 			{
-				throw new IOException("Failed to deploy artifact " + artifactPath.getName() + ", Status Code: " + i + ", Status Text: " + postMethod.getStatusText());
+				artifactCount += deployPlugin(repoUrl, pluginChannel, deployKey, artifactPath, listener, artifactCount);
 			}
-			listener.getLogger().println("Deployed artifact: " + artifactPath.getName());
-
-			artifactCount++;
 		}
 
 		if(artifactCount == 0)
@@ -176,6 +189,38 @@ public class DeployPluginTask extends Notifier
 			throw new IOException("No artifacts for deploy");
 		}
 		return true;
+	}
+
+	private static int deployPlugin(String repoUrl, String pluginChannel, String deployKey, FilePath artifactPath, BuildListener listener, int artifactCount) throws IOException, InterruptedException
+	{
+		PostMethod postMethod = new PostMethod(repoUrl + "pluginDeploy?channel=" + pluginChannel);
+		if(deployKey != null)
+		{
+			postMethod.setRequestHeader("Authorization", deployKey);
+		}
+
+		InputStream inputStream = artifactPath.read();
+		Part[] parts = {
+				new FilePart("file", new ByteArrayPartSource(artifactPath.getName(), IOUtils.toByteArray(inputStream))),
+		};
+		IOUtils.closeQuietly(inputStream);
+
+		MultipartRequestEntity entity = new MultipartRequestEntity(parts, postMethod.getParams());
+		postMethod.setRequestEntity(entity);
+
+		HttpClient client = new HttpClient();
+		client.getParams().setSoTimeout(5 * 60000);
+
+		int i = client.executeMethod(postMethod);
+		if(i != HttpServletResponse.SC_OK)
+		{
+			throw new IOException("Failed to deploy artifact " + artifactPath.getName() + ", Status Code: " + i + ", Status Text: " + postMethod.getStatusText());
+		}
+
+		listener.getLogger().println("Deployed artifact: " + artifactPath.getName());
+
+		artifactCount++;
+		return artifactCount;
 	}
 
 	private static String loadDeployKey()

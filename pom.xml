@@ -24,23 +24,30 @@
 		</license>
 	</licenses>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.ostermiller</groupId>
-			<artifactId>utils</artifactId>
-			<version>1.07.00</version>
-		</dependency>
-	</dependencies>
 	<repositories>
 		<repository>
 			<id>repo.jenkins-ci.org</id>
 			<url>http://repo.jenkins-ci.org/public/</url>
 		</repository>
 	</repositories>
+
 	<pluginRepositories>
 		<pluginRepository>
 			<id>repo.jenkins-ci.org</id>
 			<url>http://repo.jenkins-ci.org/public/</url>
 		</pluginRepository>
 	</pluginRepositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.ostermiller</groupId>
+			<artifactId>utils</artifactId>
+			<version>1.07.00</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jenkins-ci.main</groupId>
+			<artifactId>maven-plugin</artifactId>
+			<version>3.0</version>
+		</dependency>
+	</dependencies>
 </project>
