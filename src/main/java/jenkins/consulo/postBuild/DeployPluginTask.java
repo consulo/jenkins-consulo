@@ -172,6 +172,8 @@ public class DeployPluginTask extends Notifier
 		}
 		else
 		{
+			listener.getLogger().println("Deploying plugins with obsolete project structure");
+
 			FilePath allArtifactsDir = workspace.child("out/artifacts/dist");
 			if(!allArtifactsDir.exists())
 			{
