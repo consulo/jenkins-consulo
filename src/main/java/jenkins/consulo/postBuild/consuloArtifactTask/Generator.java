@@ -160,6 +160,7 @@ public class Generator
 										if(name.startsWith(prefix))
 										{
 											needAddToArchive = false;
+											break;
 										}
 									}
 
