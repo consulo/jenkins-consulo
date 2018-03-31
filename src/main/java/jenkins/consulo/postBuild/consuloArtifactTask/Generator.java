@@ -60,7 +60,11 @@ public class Generator
 			"Consulo.app/Contents/MacOS/consulo",
 	};
 
-	private static final String[] ourMacSkipJdkList = new String[]{
+	private static final String[] ourWinLinuxSkipListFromJre = new String[]{
+			"jre/lib/tools.jar"
+	};
+
+	private static final String[] ourMacSkipListFromJre = new String[]{
 			"jdk/Contents/Home/demo/",
 			"jdk/Contents/Home/include/",
 			"jdk/Contents/Home/lib/",
@@ -146,25 +150,18 @@ public class Generator
 								// is our path
 								if(!mac && name.startsWith("jre/"))
 								{
-									final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo/platform/buildSNAPSHOT/" + name, tempEntry);
-									jdkEntry.setMode(extractMode(tempEntry));
-									jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
+									if(needAddToArchive(name, ourWinLinuxSkipListFromJre))
+									{
+										final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo/platform/buildSNAPSHOT/" + name, tempEntry);
+										jdkEntry.setMode(extractMode(tempEntry));
+										jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
 
-									copyEntry(archiveOutputStream, ais, tempEntry, jdkEntry);
+										copyEntry(archiveOutputStream, ais, tempEntry, jdkEntry);
+									}
 								}
 								else if(mac && name.startsWith("jdk"))
 								{
-									boolean needAddToArchive = true;
-									for(String prefix : ourMacSkipJdkList)
-									{
-										if(name.startsWith(prefix))
-										{
-											needAddToArchive = false;
-											break;
-										}
-									}
-
-									if(needAddToArchive)
+									if(needAddToArchive(name, ourMacSkipListFromJre))
 									{
 										final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo.app/Contents/platform/buildSNAPSHOT/jre/" + name, tempEntry);
 										jdkEntry.setMode(extractMode(tempEntry));
@@ -183,6 +180,20 @@ public class Generator
 
 			archiveOutputStream.finish();
 		}
+	}
+
+	private static boolean needAddToArchive(String name, String[] list)
+	{
+		boolean needAddToArchive = true;
+		for(String prefix : list)
+		{
+			if(name.startsWith(prefix))
+			{
+				needAddToArchive = false;
+				break;
+			}
+		}
+		return needAddToArchive;
 	}
 
 	private static int extractMode(ArchiveEntry entry)
