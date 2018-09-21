@@ -25,7 +25,5 @@ public enum  PluginChannel
 	release, // every month
 	beta,    // every week
 	alpha,   // every day
-	nightly, // every commit
-
-	internal
+	nightly // every commit
 }
