@@ -32,4 +32,6 @@
 	<f:entry title="Mac JRE 64 Path" field="macJre64Path">
 		<f:textbox/>
 	</f:entry>
+
+	<f:checkbox title="JRE 11 Distribution?" field="jre11Distribution"/>
 </j:jelly>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 must-be.org
+ * Copyright 2013-2019 must-be.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,36 +16,29 @@
 
 package jenkins.consulo.postBuild.consuloArtifactTask;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
+import com.Ostermiller.util.BinaryDataException;
+import com.Ostermiller.util.LineEnds;
+import hudson.FilePath;
+import hudson.model.BuildListener;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
-import com.Ostermiller.util.BinaryDataException;
-import com.Ostermiller.util.LineEnds;
-import hudson.FilePath;
-import hudson.model.BuildListener;
+
+import javax.annotation.Nullable;
+import java.io.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author VISTALL
- * @since 04-Sep-16
+ * @since 2019-11-17
  */
-public class Generator
+public abstract class Generator
 {
 	private static final String[] ourExecutable = new String[]{
 			// linux
@@ -60,25 +53,12 @@ public class Generator
 			"Consulo.app/Contents/MacOS/consulo",
 	};
 
-	private static final String[] ourWinLinuxSkipListFromJre = new String[]{
-			"jre/lib/tools.jar"
-	};
+	protected static final String ourBuildSNAPSHOT = "buildSNAPSHOT";
 
-	private static final String[] ourMacSkipListFromJre = new String[]{
-			"jdk/Contents/Home/demo/",
-			"jdk/Contents/Home/include/",
-			"jdk/Contents/Home/lib/",
-			"jdk/Contents/Home/man/",
-			"jdk/Contents/Home/sample/",
-			"jdk/Contents/Home/src.zip",
-	};
-
-	private static final String ourBuildSNAPSHOT = "buildSNAPSHOT";
-
-	private FilePath myDistPath;
-	private FilePath myTargetDir;
-	private int myBuildNumber;
-	private BuildListener myListener;
+	protected FilePath myDistPath;
+	protected FilePath myTargetDir;
+	protected int myBuildNumber;
+	protected BuildListener myListener;
 
 	public Generator(FilePath distPath, FilePath targetDir, int buildNumber, BuildListener listener)
 	{
@@ -131,72 +111,37 @@ public class Generator
 				}
 			}
 
-			boolean mac = distZip.contains("mac");
-
 			// jdk check
 			if(jdkArchivePath != null)
 			{
-				try (InputStream is = new FileInputStream(jdkArchivePath))
-				{
-					try (GzipCompressorInputStream gz = new GzipCompressorInputStream(is))
-					{
-						try (ArchiveInputStream ais = factory.createArchiveInputStream(ArchiveStreamFactory.TAR, gz))
-						{
-							ArchiveEntry tempEntry = ais.getNextEntry();
-							while(tempEntry != null)
-							{
-								final String name = tempEntry.getName();
-
-								// is our path
-								if(!mac && name.startsWith("jre/"))
-								{
-									if(needAddToArchive(name, ourWinLinuxSkipListFromJre))
-									{
-										final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo/platform/buildSNAPSHOT/" + name, tempEntry);
-										jdkEntry.setMode(extractMode(tempEntry));
-										jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
-
-										copyEntry(archiveOutputStream, ais, tempEntry, jdkEntry);
-									}
-								}
-								else if(mac && name.startsWith("jdk"))
-								{
-									if(needAddToArchive(name, ourMacSkipListFromJre))
-									{
-										final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo.app/Contents/platform/buildSNAPSHOT/jre/" + name, tempEntry);
-										jdkEntry.setMode(extractMode(tempEntry));
-										jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
-
-										copyEntry(archiveOutputStream, ais, tempEntry, jdkEntry);
-									}
-								}
-
-								tempEntry = ais.getNextEntry();
-							}
-						}
-					}
-				}
+				boolean mac = distZip.contains("mac");
+				buildBundledJRE(jdkArchivePath, factory, archiveOutType, archiveOutputStream, mac);
 			}
 
 			archiveOutputStream.finish();
 		}
 	}
 
-	private static boolean needAddToArchive(String name, String[] list)
+	protected abstract void buildBundledJRE(String jdkArchivePath, ArchiveStreamFactory factory, String archiveOutType, ArchiveOutputStream archiveOutputStream, boolean mac) throws Exception;
+
+	public boolean isSupport32Bits()
 	{
-		boolean needAddToArchive = true;
+		return true;
+	}
+
+	protected static boolean needAddToArchive(String name, String[] list)
+	{
 		for(String prefix : list)
 		{
 			if(name.startsWith(prefix))
 			{
-				needAddToArchive = false;
-				break;
+				return false;
 			}
 		}
-		return needAddToArchive;
+		return true;
 	}
 
-	private static int extractMode(ArchiveEntry entry)
+	protected static int extractMode(ArchiveEntry entry)
 	{
 		if(entry instanceof TarArchiveEntry)
 		{
@@ -205,7 +150,7 @@ public class Generator
 		return entry.isDirectory() ? TarArchiveEntry.DEFAULT_DIR_MODE : TarArchiveEntry.DEFAULT_FILE_MODE;
 	}
 
-	private static void copyEntry(ArchiveOutputStream archiveOutputStream, ArchiveInputStream ais, ArchiveEntry tempEntry, ArchiveEntryWrapper newEntry) throws IOException
+	protected static void copyEntry(ArchiveOutputStream archiveOutputStream, ArchiveInputStream ais, ArchiveEntry tempEntry, ArchiveEntryWrapper newEntry) throws IOException
 	{
 		byte[] data = null;
 		if(!tempEntry.isDirectory())
@@ -245,7 +190,7 @@ public class Generator
 		archiveOutputStream.closeArchiveEntry();
 	}
 
-	private ArchiveEntryWrapper createEntry(String type, String name, ArchiveEntry tempEntry)
+	protected ArchiveEntryWrapper createEntry(String type, String name, ArchiveEntry tempEntry)
 	{
 		name = replaceBuildDirectory(name);
 
@@ -256,7 +201,7 @@ public class Generator
 		return new ArchiveEntryWrapper.Zip(name);
 	}
 
-	private String replaceBuildDirectory(String entryName)
+	protected String replaceBuildDirectory(String entryName)
 	{
 		if(entryName.contains(ourBuildSNAPSHOT))
 		{
@@ -265,7 +210,7 @@ public class Generator
 		return entryName;
 	}
 
-	private OutputStream createOutputStream(String type, String prefix) throws Exception
+	protected OutputStream createOutputStream(String type, String prefix) throws Exception
 	{
 		final String fileName;
 		if(type.equals(ArchiveStreamFactory.ZIP))

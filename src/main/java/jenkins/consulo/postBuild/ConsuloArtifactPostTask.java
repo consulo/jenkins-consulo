@@ -16,10 +16,6 @@
 
 package jenkins.consulo.postBuild;
 
-import java.io.IOException;
-
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -32,6 +28,12 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import jenkins.consulo.postBuild.consuloArtifactTask.Generator;
+import jenkins.consulo.postBuild.consuloArtifactTask.NewJRE11Generator;
+import jenkins.consulo.postBuild.consuloArtifactTask.OldJRE8Generator;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.IOException;
 
 /**
  * @author VISTALL
@@ -63,15 +65,22 @@ public class ConsuloArtifactPostTask extends Notifier
 	private String linuxJre32Path;
 	private String linuxJre64Path;
 	private String macJre64Path;
+	private boolean jre11Distribution;
 
 	@DataBoundConstructor
-	public ConsuloArtifactPostTask(String winJre32Path, String winJre64Path, String linuxJre32Path, String linuxJre64Path, String macJre64Path)
+	public ConsuloArtifactPostTask(String winJre32Path, String winJre64Path, String linuxJre32Path, String linuxJre64Path, String macJre64Path, boolean jre11Distribution)
 	{
 		this.winJre32Path = winJre32Path;
 		this.winJre64Path = winJre64Path;
 		this.linuxJre32Path = linuxJre32Path;
 		this.linuxJre64Path = linuxJre64Path;
 		this.macJre64Path = macJre64Path;
+		this.jre11Distribution = jre11Distribution;
+	}
+
+	public boolean isJre11Distribution()
+	{
+		return jre11Distribution;
 	}
 
 	public String getWinJre32Path()
@@ -135,23 +144,29 @@ public class ConsuloArtifactPostTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
-		Generator generator = new Generator(distDir, targetDir, build.getNumber(), listener);
+		Generator generator = jre11Distribution ? new NewJRE11Generator(distDir, targetDir, build.getNumber(), listener) : new OldJRE8Generator(distDir, targetDir, build.getNumber(), listener);
 
 		try
 		{
 			// win no jre
 			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo-win-no-jre", ArchiveStreamFactory.ZIP);
 			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo-win-no-jre", ArchiveStreamFactory.TAR);  // archive for platformDeploy
-			// win 32 bit
-			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo-win", ArchiveStreamFactory.ZIP);
-			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo-win", ArchiveStreamFactory.TAR); // archive for platformDeploy
+			if(generator.isSupport32Bits())
+			{
+				// win 32 bit
+				generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo-win", ArchiveStreamFactory.ZIP);
+				generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo-win", ArchiveStreamFactory.TAR); // archive for platformDeploy
+			}
 			// win 64 bit
 			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo-win64", ArchiveStreamFactory.ZIP);
 			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo-win64", ArchiveStreamFactory.TAR); // archive for platformDeploy
 
 			// linux
 			generator.buildDistributionInArchive(artifactPaths.getLinux(), null, "consulo-linux-no-jre", ArchiveStreamFactory.TAR);
-			generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre32Path, "consulo-linux", ArchiveStreamFactory.TAR);
+			if(generator.isSupport32Bits())
+			{
+				generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre32Path, "consulo-linux", ArchiveStreamFactory.TAR);
+			}
 			generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre64Path, "consulo-linux64", ArchiveStreamFactory.TAR);
 
 			// mac
