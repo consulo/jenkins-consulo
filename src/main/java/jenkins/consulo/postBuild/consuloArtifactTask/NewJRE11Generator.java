@@ -49,6 +49,12 @@ public class NewJRE11Generator extends Generator
 	}
 
 	@Override
+	public boolean isSupport32Bits()
+	{
+		return false;
+	}
+
+	@Override
 	protected void buildBundledJRE(String jdkArchivePath, ArchiveStreamFactory factory, String archiveOutType, ArchiveOutputStream archiveOutputStream, boolean isMac) throws Exception
 	{
 		try (InputStream is = new FileInputStream(jdkArchivePath))
