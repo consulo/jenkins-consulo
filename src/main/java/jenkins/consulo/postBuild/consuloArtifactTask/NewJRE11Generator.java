@@ -38,7 +38,7 @@ public class NewJRE11Generator extends Generator
 			"jbrsdk/lib/src.zip"
 	};
 
-	private static final String[] ourMacSkipListFromJre = new String[]{
+	private static final String[] ourMacSkipListFromJre = {
 			"jdk/Contents/Home/jmods/",
 			"jdk/Contents/Home/lib/src.zip",
 	};
