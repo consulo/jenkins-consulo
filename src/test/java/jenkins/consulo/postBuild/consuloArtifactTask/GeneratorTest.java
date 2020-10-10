@@ -70,9 +70,9 @@ public class GeneratorTest
 
 		Generator generator = new NewJRE11Generator(distDir, targetDir, 1, new DummyBuildListener());
 
-		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jdk-11.0.4+10_osx-x64_bin.tar.gz", "consulo-mac64", ArchiveStreamFactory.ZIP);
-		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jbr-11_0_4-osx-x64-b304.77.tar.gz", "consulo-mac64-jbr", ArchiveStreamFactory.ZIP);
-		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jbrsdk-11_0_4-osx-x64-b304.77.tar.gz", "consulo-mac64-jbsdk", ArchiveStreamFactory.ZIP);
+		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jdk-11.0.4+10_osx-x64_bin.tar.gz", "consulo-mac64", ArchiveStreamFactory.TAR);
+		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jbr-11_0_4-osx-x64-b304.77.tar.gz", "consulo-mac64-jbr", ArchiveStreamFactory.TAR);
+		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jbrsdk-11_0_4-osx-x64-b304.77.tar.gz", "consulo-mac64-jbsdk", ArchiveStreamFactory.TAR);
 	}
 
 	@Test
