@@ -50,6 +50,7 @@ public abstract class Generator
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/fsnotifier",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/restarter",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/printenv.py",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/printenv",
 			"Consulo.app/Contents/MacOS/consulo",
 	};
 
