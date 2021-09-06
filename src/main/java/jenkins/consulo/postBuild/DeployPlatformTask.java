@@ -16,14 +16,14 @@
 
 package jenkins.consulo.postBuild;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletResponse;
-
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Notifier;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -31,20 +31,13 @@ import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Result;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Notifier;
-import hudson.tasks.Publisher;
-import hudson.util.ListBoxModel;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * @author VISTALL
@@ -53,32 +46,12 @@ import hudson.util.ListBoxModel;
 public class DeployPlatformTask extends Notifier
 {
 	@Extension
-	public static class DescriptorImpl extends BuildStepDescriptor<Publisher>
+	public static class DescriptorImpl extends DeployDescriptorBase
 	{
-		public DescriptorImpl()
-		{
-			load();
-		}
-
+		@Override
 		public String getDisplayName()
 		{
 			return "Deploy platform artifacts to repository (Consulo)";
-		}
-
-		public boolean isApplicable(Class<? extends AbstractProject> jobType)
-		{
-			return true;
-		}
-
-		@SuppressWarnings("unused") //used by jenkins
-		public ListBoxModel doFillPluginChannelItems()
-		{
-			ListBoxModel items = new ListBoxModel();
-			for(PluginChannel goal : PluginChannel.values())
-			{
-				items.add(goal.name(), goal.name());
-			}
-			return items;
 		}
 	}
 
@@ -136,7 +109,7 @@ public class DeployPlatformTask extends Notifier
 
 		ArtifactPaths artifactPaths = ArtifactPaths.find(build);
 
-		String deployKey = loadDeployKey();
+		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey();
 
 		FilePath workspace = build.getWorkspace();
 		FilePath allArtifactsDir = workspace.child(artifactPaths.getAllArtifactsPath());
@@ -158,7 +131,7 @@ public class DeployPlatformTask extends Notifier
 			PostMethod postMethod = new PostMethod(repoUrl + "platformDeploy?channel=" + pluginChannel + "&platformVersion=" + build.getNumber());
 			if(deployKey != null)
 			{
-				postMethod.setRequestHeader("Authorization", deployKey);
+				postMethod.setRequestHeader("Authorization", "Bearer " + deployKey);
 			}
 
 			InputStream inputStream = artifactPath.read();
@@ -188,19 +161,5 @@ public class DeployPlatformTask extends Notifier
 			throw new IOException("No artifacts for deploy");
 		}
 		return true;
-	}
-
-	private static String loadDeployKey()
-	{
-		try
-		{
-			File file = new File(System.getProperty("user.home"), ".consuloWebservice/deploy.key");
-
-			return file.exists() ? FileUtils.readFileToString(file, "UTF-8") : null;
-		}
-		catch(Exception e)
-		{
-			return null;
-		}
 	}
 }

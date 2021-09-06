@@ -16,22 +16,6 @@
 
 package jenkins.consulo.postBuild;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.io.FileUtils;
-import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -41,11 +25,21 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
-import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
-import hudson.tasks.Publisher;
-import hudson.util.ListBoxModel;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
 
 /**
  * @author VISTALL
@@ -54,32 +48,12 @@ import hudson.util.ListBoxModel;
 public class DeployPluginTask extends Notifier
 {
 	@Extension
-	public static class DescriptorImpl extends BuildStepDescriptor<Publisher>
+	public static class DescriptorImpl extends DeployDescriptorBase
 	{
-		public DescriptorImpl()
-		{
-			load();
-		}
-
+		@Override
 		public String getDisplayName()
 		{
 			return "Deploy plugin artifacts to repository (Consulo)";
-		}
-
-		public boolean isApplicable(Class<? extends AbstractProject> jobType)
-		{
-			return true;
-		}
-
-		@SuppressWarnings("unused") //used by jenkins
-		public ListBoxModel doFillPluginChannelItems()
-		{
-			ListBoxModel items = new ListBoxModel();
-			for(PluginChannel goal : PluginChannel.values())
-			{
-				items.add(goal.name(), goal.name());
-			}
-			return items;
 		}
 	}
 
@@ -132,7 +106,7 @@ public class DeployPluginTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
-		String deployKey = loadDeployKey();
+		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey();
 		String repoUrl = enableRepositoryUrl ? repositoryUrl : Urls.ourDefaultRepositoryUrl;
 		int artifactCount = 0;
 
@@ -198,7 +172,7 @@ public class DeployPluginTask extends Notifier
 		PostMethod postMethod = new PostMethod(repoUrl + "pluginDeploy?channel=" + pluginChannel);
 		if(deployKey != null)
 		{
-			postMethod.setRequestHeader("Authorization", deployKey);
+			postMethod.setRequestHeader("Authorization", "Bearer " + deployKey);
 		}
 
 		InputStream inputStream = artifactPath.read();
@@ -223,19 +197,5 @@ public class DeployPluginTask extends Notifier
 
 		artifactCount++;
 		return artifactCount;
-	}
-
-	private static String loadDeployKey()
-	{
-		try
-		{
-			File file = new File(System.getProperty("user.home"), ".consuloWebservice/deploy.key");
-
-			return file.exists() ? FileUtils.readFileToString(file, "UTF-8") : null;
-		}
-		catch(Exception e)
-		{
-			return null;
-		}
 	}
 }
