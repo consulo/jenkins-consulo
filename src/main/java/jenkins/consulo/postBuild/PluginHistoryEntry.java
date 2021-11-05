@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 must-be.org
+ * Copyright 2013-2021 must-be.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,15 @@ package jenkins.consulo.postBuild;
 
 /**
  * @author VISTALL
- * @since 07-Oct-16
+ * @since 17/10/2021
  */
-public interface Urls
+public class PluginHistoryEntry
 {
-	String ourDefaultRepositoryUrl = "https://hub.consulo.io/api/repository/";
+	public String repoUrl;
+
+	//private String commitUrl;
+	public String commitHash;
+	public String commitMessage;
+	public long commitTimestamp;
+	public String commitAuthor;
 }
