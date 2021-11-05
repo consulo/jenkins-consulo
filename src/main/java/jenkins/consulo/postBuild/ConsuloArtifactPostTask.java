@@ -28,8 +28,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import jenkins.consulo.postBuild.consuloArtifactTask.Generator;
-import jenkins.consulo.postBuild.consuloArtifactTask.NewJRE11Generator;
-import jenkins.consulo.postBuild.consuloArtifactTask.OldJRE8Generator;
+import jenkins.consulo.postBuild.consuloArtifactTask.JRE11Generator;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -65,22 +64,15 @@ public class ConsuloArtifactPostTask extends Notifier
 	private String linuxJre32Path;
 	private String linuxJre64Path;
 	private String macJre64Path;
-	private boolean jre11Distribution;
 
 	@DataBoundConstructor
-	public ConsuloArtifactPostTask(String winJre32Path, String winJre64Path, String linuxJre32Path, String linuxJre64Path, String macJre64Path, boolean jre11Distribution)
+	public ConsuloArtifactPostTask(String winJre32Path, String winJre64Path, String linuxJre32Path, String linuxJre64Path, String macJre64Path)
 	{
 		this.winJre32Path = winJre32Path;
 		this.winJre64Path = winJre64Path;
 		this.linuxJre32Path = linuxJre32Path;
 		this.linuxJre64Path = linuxJre64Path;
 		this.macJre64Path = macJre64Path;
-		this.jre11Distribution = jre11Distribution;
-	}
-
-	public boolean isJre11Distribution()
-	{
-		return jre11Distribution;
 	}
 
 	public String getWinJre32Path()
@@ -144,7 +136,7 @@ public class ConsuloArtifactPostTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
-		Generator generator = jre11Distribution ? new NewJRE11Generator(distDir, targetDir, build.getNumber(), listener) : new OldJRE8Generator(distDir, targetDir, build.getNumber(), listener);
+		Generator generator = new JRE11Generator(distDir, targetDir, build.getNumber(), listener);
 
 		try
 		{

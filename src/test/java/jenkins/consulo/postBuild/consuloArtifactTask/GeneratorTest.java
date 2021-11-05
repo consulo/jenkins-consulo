@@ -18,11 +18,9 @@ package jenkins.consulo.postBuild.consuloArtifactTask;
 
 import hudson.FilePath;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -47,7 +45,7 @@ public class GeneratorTest
 
 		targetDir.deleteContents();
 
-		Generator generator = new NewJRE11Generator(distDir, targetDir, 1, new DummyBuildListener());
+		Generator generator = new JRE11Generator(distDir, targetDir, 1, new DummyBuildListener());
 
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-win.zip", localPath.getPath() + "/jbrsdk-11_0_4-windows-x64-b304.77.tar.gz", "consulo-win64", ArchiveStreamFactory.ZIP);
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-win.zip", localPath.getPath() + "/jbr-11_0_4-windows-x64-b304.77.tar.gz", "consulo-win64-jre", ArchiveStreamFactory.ZIP);
@@ -68,36 +66,10 @@ public class GeneratorTest
 
 		targetDir.deleteContents();
 
-		Generator generator = new NewJRE11Generator(distDir, targetDir, 1, new DummyBuildListener());
+		Generator generator = new JRE11Generator(distDir, targetDir, 1, new DummyBuildListener());
 
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jdk-11.0.4+10_osx-x64_bin.tar.gz", "consulo-mac64", ArchiveStreamFactory.TAR);
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jbr-11_0_4-osx-x64-b304.77.tar.gz", "consulo-mac64-jbr", ArchiveStreamFactory.TAR);
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jbrsdk-11_0_4-osx-x64-b304.77.tar.gz", "consulo-mac64-jbsdk", ArchiveStreamFactory.TAR);
-	}
-
-	@Test
-	public void testMac20180331() throws Exception
-	{
-		File rootDirectory = new File(GeneratorTest.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-
-		final Path targetDirectory = Files.createTempDirectory("temp");
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				FileUtils.deleteQuietly(targetDirectory.toFile());
-			}
-		}));
-
-		File localPath = new File(rootDirectory, "jenkins/consulo/postBuild/consuloArtifactTask/testMac20180331");
-
-		FilePath distDir = new FilePath(localPath);
-
-		FilePath targetDir = new FilePath(targetDirectory.toFile());
-
-		Generator generator = new OldJRE8Generator(distDir, targetDir, 1, new DummyBuildListener());
-
-		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jbrex8u152b1136.28_osx_x64.tar.gz", "consulo-mac64", ArchiveStreamFactory.TAR);
 	}
 }
