@@ -37,10 +37,8 @@ import org.apache.commons.io.IOUtils;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -203,12 +201,34 @@ public abstract class DeployArtifactTaskBase extends Notifier
 	{
 		try
 		{
-			MethodHandle getRepoUrl = MethodHandles.lookup().findVirtual(repositoryBrowser.getClass(), "getRepoUrl", MethodType.methodType(String.class));
+			Method getRepoUrl = findMethod(repositoryBrowser.getClass(), "getRepoUrl");
 			return (String) getRepoUrl.invoke(repositoryBrowser);
 		}
 		catch(Throwable ignored)
 		{
 		}
+		return null;
+	}
+
+	private static Method findMethod(final Class<?> type, String name)
+	{
+		Class<?> target = type;
+
+		while(target != null)
+		{
+			try
+			{
+				Method declaredMethod = target.getDeclaredMethod(name);
+				declaredMethod.setAccessible(true);
+				return declaredMethod;
+			}
+			catch(NoSuchMethodException ignored)
+			{
+			}
+
+			target = target.getSuperclass();
+		}
+
 		return null;
 	}
 
