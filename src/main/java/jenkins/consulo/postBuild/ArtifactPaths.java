@@ -64,8 +64,8 @@ public class ArtifactPaths
 
 			if(is3Version)
 			{
-				String win = "consulo-bundle-" + _3_SNAPSHOT + "-win.zip";
-				String linux = "consulo-bundle-" + _3_SNAPSHOT + "-linux.zip";
+				String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win.zip";
+				String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux.zip";
 				String mac = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64.zip";
 				return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, mac);
 			}
