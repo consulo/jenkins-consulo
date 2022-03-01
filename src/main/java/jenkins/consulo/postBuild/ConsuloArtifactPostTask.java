@@ -162,8 +162,8 @@ public class ConsuloArtifactPostTask extends Notifier
 			generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre64Path, "consulo-linux64", ArchiveStreamFactory.TAR);
 
 			// mac
-			generator.buildDistributionInArchive(artifactPaths.getMac(), null, "consulo-mac-no-jre", ArchiveStreamFactory.TAR);
-			generator.buildDistributionInArchive(artifactPaths.getMac(), macJre64Path, "consulo-mac64", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getMac64(), null, "consulo-mac-no-jre", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getMac64(), macJre64Path, "consulo-mac64", ArchiveStreamFactory.TAR);
 		}
 		catch(Exception throwable)
 		{

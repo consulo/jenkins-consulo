@@ -25,6 +25,7 @@ import org.dom4j.io.SAXReader;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.io.StringReader;
 
 /**
  * @author VISTALL
@@ -44,12 +45,11 @@ public class ArtifactPaths
 		FilePath pom = workspace.child("pom.xml");
 		if(pom.exists())
 		{
-			SAXReader saxBuilder = new SAXReader(false);
-
 			boolean is3Version = false;
 			try
 			{
-				Document document = saxBuilder.read(pom.readToString());
+				SAXReader saxBuilder = new SAXReader(false);
+				Document document = saxBuilder.read(new StringReader(pom.readToString()));
 				Element version = document.getRootElement().element("version");
 				if(version != null)
 				{
@@ -88,15 +88,15 @@ public class ArtifactPaths
 
 	private String myWin;
 	private String myLinux;
-	private String myMac;
+	private String myMac64;
 
-	private ArtifactPaths(String allArtifactsPath, String rawArtifactsPath, String win, String linux, String mac)
+	private ArtifactPaths(String allArtifactsPath, String rawArtifactsPath, String win, String linux, String mac64)
 	{
 		myAllArtifactsPath = allArtifactsPath;
 		myRawArtifactsPath = rawArtifactsPath;
 		myWin = win;
 		myLinux = linux;
-		myMac = mac;
+		myMac64 = mac64;
 	}
 
 	public String getWin()
@@ -109,9 +109,9 @@ public class ArtifactPaths
 		return myLinux;
 	}
 
-	public String getMac()
+	public String getMac64()
 	{
-		return myMac;
+		return myMac64;
 	}
 
 	public String getAllArtifactsPath()
