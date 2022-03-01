@@ -115,7 +115,7 @@ public class ConsuloArtifactPostTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
-		ArtifactPaths artifactPaths = ArtifactPaths.find(build);
+		ArtifactPaths artifactPaths = ArtifactPaths.find(build, listener);
 
 		FilePath workspace = build.getWorkspace();
 
