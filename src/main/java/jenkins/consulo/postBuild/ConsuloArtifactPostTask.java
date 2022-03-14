@@ -61,15 +61,17 @@ public class ConsuloArtifactPostTask extends Notifier
 
 	private String winJre32Path;
 	private String winJre64Path;
+	private String winJreA64Path;
 	private String linuxJre32Path;
 	private String linuxJre64Path;
 	private String macJre64Path;
 
 	@DataBoundConstructor
-	public ConsuloArtifactPostTask(String winJre32Path, String winJre64Path, String linuxJre32Path, String linuxJre64Path, String macJre64Path)
+	public ConsuloArtifactPostTask(String winJre32Path, String winJreA64Path, String winJre64Path, String linuxJre32Path, String linuxJre64Path, String macJre64Path)
 	{
 		this.winJre32Path = winJre32Path;
 		this.winJre64Path = winJre64Path;
+		this.winJreA64Path = winJreA64Path;
 		this.linuxJre32Path = linuxJre32Path;
 		this.linuxJre64Path = linuxJre64Path;
 		this.macJre64Path = macJre64Path;
@@ -78,6 +80,11 @@ public class ConsuloArtifactPostTask extends Notifier
 	public String getWinJre32Path()
 	{
 		return winJre32Path;
+	}
+
+	public String getWinJreA64Path()
+	{
+		return winJreA64Path;
 	}
 
 	public String getWinJre64Path()
@@ -136,7 +143,18 @@ public class ConsuloArtifactPostTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
-		Generator generator = new JRE11Generator(distDir, targetDir, build.getNumber(), listener);
+		FilePath jreDirectory = workspace.child("jre");
+
+		if(jreDirectory.exists())
+		{
+			jreDirectory.deleteContents();
+		}
+		else
+		{
+			jreDirectory.mkdirs();
+		}
+
+		Generator generator = new JRE11Generator(distDir, targetDir, jreDirectory, build.getNumber(), listener);
 
 		try
 		{

@@ -18,14 +18,13 @@ package jenkins.consulo.postBuild.consuloArtifactTask;
 
 import hudson.FilePath;
 import hudson.model.BuildListener;
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveOutputStream;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.archivers.*;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author VISTALL
@@ -34,18 +33,18 @@ import java.io.InputStream;
 public class JRE11Generator extends Generator
 {
 	private static final String[] ourWinLinuxSkipListFromJre = {
-			"jbrsdk/jmods",
-			"jbrsdk/lib/src.zip"
+			"jmods",
+			"lib/src.zip"
 	};
 
 	private static final String[] ourMacSkipListFromJre = {
-			"jdk/Contents/Home/jmods/",
-			"jdk/Contents/Home/lib/src.zip",
+			"Contents/Home/jmods/",
+			"Contents/Home/lib/src.zip",
 	};
 
-	public JRE11Generator(FilePath distPath, FilePath targetDir, int buildNumber, BuildListener listener)
+	public JRE11Generator(FilePath distPath, FilePath targetDir, FilePath jreDirectory, int buildNumber, BuildListener listener)
 	{
-		super(distPath, targetDir, buildNumber, listener);
+		super(distPath, targetDir, jreDirectory, buildNumber, listener);
 	}
 
 	@Override
@@ -55,62 +54,127 @@ public class JRE11Generator extends Generator
 	}
 
 	@Override
-	protected void buildBundledJRE(String jdkArchivePath, ArchiveStreamFactory factory, String archiveOutType, ArchiveOutputStream archiveOutputStream, boolean isMac) throws Exception
+	protected void buildBundledJRE(FilePath jdkArchivePath, ArchiveStreamFactory factory, final String archiveOutType, final ArchiveOutputStream archiveOutputStream, final boolean isMac) throws Exception
 	{
-		try (InputStream is = new FileInputStream(jdkArchivePath))
+		final String[] rootDirectoryRef = new String[2];
+
+		openAndProcessJreArchive(jdkArchivePath, factory, new ArchiveInputStreamProcessor()
 		{
-			try (GzipCompressorInputStream gz = new GzipCompressorInputStream(is))
+			@Override
+			public void run(ArchiveInputStream stream) throws IOException
 			{
-				try (ArchiveInputStream ais = factory.createArchiveInputStream(ArchiveStreamFactory.TAR, gz))
+				ArchiveEntry tempEntry = stream.getNextEntry();
+				while(tempEntry != null)
 				{
-					ArchiveEntry tempEntry = ais.getNextEntry();
-					while(tempEntry != null)
+					final String name = skipStartEntry(tempEntry.getName());
+					if(!name.isEmpty())
 					{
-						final String name = skipStartEntry(tempEntry.getName());
-
-						if(isUselessFile(name))
+						if(tempEntry.isDirectory())
 						{
-							tempEntry = ais.getNextEntry();
-							continue;
+							rootDirectoryRef[0] = name;
+							rootDirectoryRef[1] = tempEntry.getName();
+							break;
 						}
+					}
 
-						if(isMac)
-						{
-							// FIXME [VISTALL] we need change it if using another JRE
-							if(name.startsWith("jdk-11.0.4.jdk/") || name.startsWith("jbr/") || name.startsWith("jbrsdk/"))
-							{
-								String correntName = remapMacPath(name);
+					tempEntry = stream.getNextEntry();
+				}
+			}
+		});
 
-								if(needAddToArchive(correntName, ourMacSkipListFromJre))
-								{
-									final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo.app/Contents/platform/buildSNAPSHOT/jre/" + correntName, tempEntry);
-									jdkEntry.setMode(extractMode(tempEntry));
-									jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
+		if(rootDirectoryRef[0] == null)
+		{
+			throw new IOException("Can't find root directory");
+		}
 
-									copyEntry(archiveOutputStream, ais, tempEntry, jdkEntry);
-								}
-							}
-						}
-						else
-						{
-							// FIXME [VISTALL] we need change it if using another JRE
-							if(name.startsWith("jbr/") || name.startsWith("jbrsdk/"))
-							{
-								// skip debug files
-								if(needAddToArchive(name, ourWinLinuxSkipListFromJre))
-								{
-									String correntName = remapJetBrainsPath(name, "jre");
+		// if jre archive is zip, path will be jdk-17/
+		final String rootPath = rootDirectoryRef[0];
+		// but if archive is tar, path will be ./jdk-17/, we need it for correct skipping
+		final String originalRootPath = rootDirectoryRef[1];
 
-									final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo/platform/buildSNAPSHOT/" + correntName, tempEntry);
-									jdkEntry.setMode(extractMode(tempEntry));
-									jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
+		openAndProcessJreArchive(jdkArchivePath, factory, new ArchiveInputStreamProcessor()
+		{
+			@Override
+			public void run(ArchiveInputStream ais) throws IOException
+			{
+				ArchiveEntry tempEntry = ais.getNextEntry();
+				while(tempEntry != null)
+				{
+					final String name = skipStartEntry(tempEntry.getName());
 
-									copyEntry(archiveOutputStream, ais, tempEntry, jdkEntry);
-								}
-							}
-						}
-
+					if(isUselessFile(name))
+					{
 						tempEntry = ais.getNextEntry();
+						continue;
+					}
+
+					String[] skipSuffixes = isMac ? ourMacSkipListFromJre : ourWinLinuxSkipListFromJre;
+					Set<String> skipPaths = new HashSet<>();
+					for(String skip : skipSuffixes)
+					{
+						skipPaths.add(rootPath + skip);
+					}
+
+					if(isMac)
+					{
+						if(name.startsWith(rootPath))
+						{
+							String correctName = name.replace(rootPath, "jdk/");
+
+							if(needAddToArchive(name, skipPaths))
+							{
+								final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo.app/Contents/platform/buildSNAPSHOT/jre/" + correctName, tempEntry);
+								jdkEntry.setMode(extractMode(tempEntry));
+								jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
+
+								copyEntry(archiveOutputStream, ais, tempEntry, jdkEntry);
+							}
+						}
+					}
+					else
+					{
+						if(name.startsWith(rootPath))
+						{
+							if(needAddToArchive(name, skipPaths))
+							{
+								String correctName = name.replace(rootPath, "jre/");
+
+								final ArchiveEntryWrapper jdkEntry = createEntry(archiveOutType, "Consulo/platform/buildSNAPSHOT/" + correctName, tempEntry);
+								jdkEntry.setMode(extractMode(tempEntry));
+								jdkEntry.setTime(tempEntry.getLastModifiedDate().getTime());
+
+								copyEntry(archiveOutputStream, ais, tempEntry, jdkEntry);
+							}
+						}
+					}
+
+					tempEntry = ais.getNextEntry();
+				}
+			}
+		});
+	}
+
+	private static void openAndProcessJreArchive(FilePath jdkArchivePath, ArchiveStreamFactory factory, ArchiveInputStreamProcessor processor) throws IOException, ArchiveException, InterruptedException
+	{
+		if(jdkArchivePath.getName().endsWith(".zip"))
+		{
+			try (InputStream is = jdkArchivePath.read())
+			{
+				try (ArchiveInputStream ais = factory.createArchiveInputStream(ArchiveStreamFactory.ZIP, is))
+				{
+					processor.run(ais);
+				}
+			}
+		}
+		else
+		{
+			try (InputStream is = jdkArchivePath.read())
+			{
+				try (GzipCompressorInputStream gz = new GzipCompressorInputStream(is))
+				{
+					try (ArchiveInputStream ais = factory.createArchiveInputStream(ArchiveStreamFactory.TAR, gz))
+					{
+						processor.run(ais);
 					}
 				}
 			}
@@ -124,35 +188,6 @@ public class JRE11Generator extends Generator
 			return name.substring(2, name.length());
 		}
 		return name;
-	}
-
-	private static String remapMacPath(String name)
-	{
-		if(name.startsWith("jdk-11.0.4.jdk/"))
-		{
-			return name.replaceAll("jdk-11.0.4.jdk", "jdk");
-		}
-		else if(name.startsWith("jbr/") || name.startsWith("jbrsdk/"))
-		{
-			return remapJetBrainsPath(name, "jdk");
-		}
-		return name;
-	}
-
-	private static String remapJetBrainsPath(String name, String to)
-	{
-		if(name.startsWith("jbr/"))
-		{
-			return to + "/" + name.substring(4, name.length());
-		}
-		else if(name.startsWith("jbrsdk/"))
-		{
-			return to + "/" + name.substring(7, name.length());
-		}
-		else
-		{
-			throw new UnsupportedOperationException(name);
-		}
 	}
 
 	private static boolean isUselessFile(String path)

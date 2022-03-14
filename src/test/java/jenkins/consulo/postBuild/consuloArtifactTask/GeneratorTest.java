@@ -36,6 +36,7 @@ public class GeneratorTest
 		File rootDirectory = new File(GeneratorTest.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 
 		final Path targetDirectory = Paths.get("result-directory");
+		final Path jarDirectory = Paths.get("jar-directory");
 
 		File localPath = new File(rootDirectory, "jenkins/consulo/postBuild/consuloArtifactTask/testWindows20191117");
 
@@ -45,7 +46,7 @@ public class GeneratorTest
 
 		targetDir.deleteContents();
 
-		Generator generator = new JRE11Generator(distDir, targetDir, 1, new DummyBuildListener());
+		Generator generator = new JRE11Generator(distDir, targetDir, new FilePath(jarDirectory.toFile()), 1, new DummyBuildListener());
 
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-win.zip", localPath.getPath() + "/jbrsdk-11_0_4-windows-x64-b304.77.tar.gz", "consulo-win64", ArchiveStreamFactory.ZIP);
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-win.zip", localPath.getPath() + "/jbr-11_0_4-windows-x64-b304.77.tar.gz", "consulo-win64-jre", ArchiveStreamFactory.ZIP);
@@ -57,6 +58,7 @@ public class GeneratorTest
 		File rootDirectory = new File(GeneratorTest.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 
 		final Path targetDirectory = Paths.get("result-directory");
+		final Path jarDirectory = Paths.get("jar-directory");
 
 		File localPath = new File(rootDirectory, "jenkins/consulo/postBuild/consuloArtifactTask/testMac20191117");
 
@@ -66,7 +68,7 @@ public class GeneratorTest
 
 		targetDir.deleteContents();
 
-		Generator generator = new JRE11Generator(distDir, targetDir, 1, new DummyBuildListener());
+		Generator generator = new JRE11Generator(distDir, targetDir, new FilePath(jarDirectory.toFile()), 1, new DummyBuildListener());
 
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jdk-11.0.4+10_osx-x64_bin.tar.gz", "consulo-mac64", ArchiveStreamFactory.TAR);
 		generator.buildDistributionInArchive("consulo-bundle-2-SNAPSHOT-mac.zip", localPath.getPath() + "/jbr-11_0_4-osx-x64-b304.77.tar.gz", "consulo-mac64-jbr", ArchiveStreamFactory.TAR);

@@ -31,8 +31,11 @@ import org.apache.commons.io.IOUtils;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author VISTALL
@@ -58,19 +61,55 @@ public abstract class Generator
 
 	protected FilePath myDistPath;
 	protected FilePath myTargetDir;
+	protected FilePath myJreDirectory;
 	protected int myBuildNumber;
 	protected BuildListener myListener;
 
-	public Generator(FilePath distPath, FilePath targetDir, int buildNumber, BuildListener listener)
+	public Generator(FilePath distPath, FilePath targetDir, FilePath jreDirectory, int buildNumber, BuildListener listener)
 	{
 		myDistPath = distPath;
 		myTargetDir = targetDir;
+		myJreDirectory = jreDirectory;
 		myBuildNumber = buildNumber;
 		myListener = listener;
 	}
 
-	public void buildDistributionInArchive(String distZip, @Nullable String jdkArchivePath, String path, String archiveOutType) throws Exception
+	public void buildDistributionInArchive(String distZip, @Nullable String jdkArchivePathOrUrl, String path, String archiveOutType) throws Exception
 	{
+		FilePath jdkArchivePath;
+
+		if(jdkArchivePathOrUrl != null && jdkArchivePathOrUrl.startsWith("https://"))
+		{
+			myListener.getLogger().println("JRE: downloading " + jdkArchivePathOrUrl);
+
+			URL jreUrl = new URL(jdkArchivePathOrUrl);
+
+			HttpURLConnection connection = (HttpURLConnection) jreUrl.openConnection();
+
+			String fileName = null;
+			String contentDisposition = connection.getHeaderField("Content-Disposition");
+			if(contentDisposition != null)
+			{
+				fileName = contentDisposition.replaceFirst("(?i)^.*filename=\"?([^\"]+)\"?.*$", "$1");
+			}
+			else
+			{
+				fileName = jdkArchivePathOrUrl.substring(jdkArchivePathOrUrl.lastIndexOf('/') + 1, jdkArchivePathOrUrl.length());
+			}
+
+			connection.disconnect();
+
+			FilePath jreFileArchiveFile = myJreDirectory.child(fileName);
+
+			jreFileArchiveFile.copyFrom(jreUrl);
+
+			jdkArchivePath = jreFileArchiveFile;
+		}
+		else
+		{
+			jdkArchivePath = jdkArchivePathOrUrl == null ? null : new FilePath(new File(jdkArchivePathOrUrl));
+		}
+
 		myListener.getLogger().println("Build: " + path);
 
 		ArchiveStreamFactory factory = new ArchiveStreamFactory();
@@ -123,16 +162,16 @@ public abstract class Generator
 		}
 	}
 
-	protected abstract void buildBundledJRE(String jdkArchivePath, ArchiveStreamFactory factory, String archiveOutType, ArchiveOutputStream archiveOutputStream, boolean mac) throws Exception;
+	protected abstract void buildBundledJRE(FilePath jdkArchivePath, ArchiveStreamFactory factory, String archiveOutType, ArchiveOutputStream archiveOutputStream, boolean mac) throws Exception;
 
 	public boolean isSupport32Bits()
 	{
 		return true;
 	}
 
-	protected static boolean needAddToArchive(String name, String[] list)
+	protected static boolean needAddToArchive(String name, Set<String> paths)
 	{
-		for(String prefix : list)
+		for(String prefix : paths)
 		{
 			if(name.startsWith(prefix))
 			{
