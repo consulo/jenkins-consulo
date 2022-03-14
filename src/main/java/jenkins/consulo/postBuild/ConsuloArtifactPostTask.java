@@ -48,11 +48,13 @@ public class ConsuloArtifactPostTask extends Notifier
 			load();
 		}
 
+		@Override
 		public String getDisplayName()
 		{
 			return "Create Consulo artifacts";
 		}
 
+		@Override
 		public boolean isApplicable(Class<? extends AbstractProject> jobType)
 		{
 			return true;
@@ -161,19 +163,30 @@ public class ConsuloArtifactPostTask extends Notifier
 			// win no jre
 			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo-win-no-jre", ArchiveStreamFactory.ZIP);
 			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo-win-no-jre", ArchiveStreamFactory.TAR);  // archive for platformDeploy
-			if(generator.isSupport32Bits())
+
+			// win 32 bit
+			if(winJre32Path != null && !winJre32Path.isEmpty())
 			{
-				// win 32 bit
 				generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo-win", ArchiveStreamFactory.ZIP);
 				generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo-win", ArchiveStreamFactory.TAR); // archive for platformDeploy
 			}
+
 			// win 64 bit
 			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo-win64", ArchiveStreamFactory.ZIP);
 			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo-win64", ArchiveStreamFactory.TAR); // archive for platformDeploy
 
-			// linux
+			// win A64 bit
+			if(winJreA64Path != null && !winJreA64Path.isEmpty())
+			{
+				generator.buildDistributionInArchive(artifactPaths.getWin(), winJreA64Path, "consulo-winA64", ArchiveStreamFactory.ZIP);
+				generator.buildDistributionInArchive(artifactPaths.getWin(), winJreA64Path, "consulo-winA64", ArchiveStreamFactory.TAR); // archive for platformDeploy
+			}
+
+			// linux no jre
 			generator.buildDistributionInArchive(artifactPaths.getLinux(), null, "consulo-linux-no-jre", ArchiveStreamFactory.TAR);
-			if(generator.isSupport32Bits())
+
+			// linux x86
+			if(linuxJre32Path != null && !linuxJre32Path.isEmpty())
 			{
 				generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre32Path, "consulo-linux", ArchiveStreamFactory.TAR);
 			}

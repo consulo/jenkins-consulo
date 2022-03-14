@@ -48,12 +48,6 @@ public class JRE11Generator extends Generator
 	}
 
 	@Override
-	public boolean isSupport32Bits()
-	{
-		return false;
-	}
-
-	@Override
 	protected void buildBundledJRE(FilePath jdkArchivePath, ArchiveStreamFactory factory, final String archiveOutType, final ArchiveOutputStream archiveOutputStream, final boolean isMac) throws Exception
 	{
 		final String[] rootDirectoryRef = new String[2];

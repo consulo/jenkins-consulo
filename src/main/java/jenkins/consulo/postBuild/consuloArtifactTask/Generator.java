@@ -164,11 +164,6 @@ public abstract class Generator
 
 	protected abstract void buildBundledJRE(FilePath jdkArchivePath, ArchiveStreamFactory factory, String archiveOutType, ArchiveOutputStream archiveOutputStream, boolean mac) throws Exception;
 
-	public boolean isSupport32Bits()
-	{
-		return true;
-	}
-
 	protected static boolean needAddToArchive(String name, Set<String> paths)
 	{
 		for(String prefix : paths)
