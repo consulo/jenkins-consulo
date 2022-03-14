@@ -145,7 +145,7 @@ public class ConsuloArtifactPostTask extends Notifier
 			throw new IOException("Project is not build");
 		}
 
-		FilePath jreDirectory = workspace.child("jre");
+		FilePath jreDirectory = workspace.child("distribution/target/jre");
 
 		if(jreDirectory.exists())
 		{
