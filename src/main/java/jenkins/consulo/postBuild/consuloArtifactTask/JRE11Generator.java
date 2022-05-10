@@ -16,14 +16,17 @@
 
 package jenkins.consulo.postBuild.consuloArtifactTask;
 
+import com.github.gino0631.xar.XarArchive;
 import hudson.FilePath;
 import hudson.model.BuildListener;
 import org.apache.commons.compress.archivers.*;
+import org.apache.commons.compress.archivers.cpio.CpioArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -48,7 +51,11 @@ public class JRE11Generator extends Generator
 	}
 
 	@Override
-	protected void buildBundledJRE(FilePath jdkArchivePath, ArchiveStreamFactory factory, final String archiveOutType, final ArchiveOutputStream archiveOutputStream, final boolean isMac) throws Exception
+	protected void buildBundledJRE(FilePath jdkArchivePath,
+								   ArchiveStreamFactory factory,
+								   final String archiveOutType,
+								   final ArchiveOutputStream archiveOutputStream,
+								   final boolean isMac) throws Exception
 	{
 		final String[] rootDirectoryRef = new String[2];
 
@@ -111,9 +118,11 @@ public class JRE11Generator extends Generator
 
 					if(isMac)
 					{
-						if(name.startsWith(rootPath))
+						// dot used in pkg, without root entry like jdk17_1
+						if(name.startsWith(rootPath) || rootPath.equals("."))
 						{
-							String correctName = name.replace(rootPath, "jdk/");
+							// do not allow replace dot for all files inside archive
+							String correctName = rootPath.equals(".") ? "jdk/" + name : name.replace(rootPath, "jdk/");
 
 							if(needAddToArchive(name, skipPaths))
 							{
@@ -148,7 +157,9 @@ public class JRE11Generator extends Generator
 		});
 	}
 
-	private static void openAndProcessJreArchive(FilePath jdkArchivePath, ArchiveStreamFactory factory, ArchiveInputStreamProcessor processor) throws IOException, ArchiveException, InterruptedException
+	private static void openAndProcessJreArchive(FilePath jdkArchivePath,
+												 ArchiveStreamFactory factory,
+												 ArchiveInputStreamProcessor processor) throws IOException, ArchiveException, InterruptedException
 	{
 		if(jdkArchivePath.getName().endsWith(".zip"))
 		{
@@ -157,6 +168,36 @@ public class JRE11Generator extends Generator
 				try (ArchiveInputStream ais = factory.createArchiveInputStream(ArchiveStreamFactory.ZIP, is))
 				{
 					processor.run(ais);
+				}
+			}
+		}
+		else if(jdkArchivePath.getName().endsWith(".pkg"))
+		{
+			try (XarArchive archive = XarArchive.load(() ->
+			{
+				try
+				{
+					return jdkArchivePath.read();
+				}
+				catch(InterruptedException e)
+				{
+					throw new IOException(e);
+				}
+			}))
+			{
+				List<XarArchive.Entry> entries = archive.getEntries();
+
+				for(XarArchive.Entry entry : entries)
+				{
+					if("Payload".equals(entry.getName()))
+					{
+						InputStream stream = entry.newInputStream();
+
+						try (CpioArchiveInputStream archiveInputStream = new CpioArchiveInputStream(new GzipCompressorInputStream(stream)))
+						{
+							processor.run(archiveInputStream);
+						}
+					}
 				}
 			}
 		}
@@ -186,6 +227,6 @@ public class JRE11Generator extends Generator
 
 	private static boolean isUselessFile(String path)
 	{
-		return path.endsWith(".pdb") || path.endsWith(".DS_Store") || path.contains(".dSYM/");
+		return path.endsWith(".pdb") || path.endsWith(".DS_Store") || path.contains(".dSYM/") || path.equals(".");
 	}
 }

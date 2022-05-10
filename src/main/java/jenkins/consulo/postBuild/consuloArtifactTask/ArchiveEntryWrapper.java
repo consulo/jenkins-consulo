@@ -17,6 +17,7 @@
 package jenkins.consulo.postBuild.consuloArtifactTask;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.cpio.CpioArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarConstants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -34,20 +35,20 @@ public abstract class ArchiveEntryWrapper<E extends ArchiveEntry>
 			super(create(name, tempEntry));
 		}
 
-		private static TarArchiveEntry create(String name, ArchiveEntry tempEntry)
+		private static TarArchiveEntry create(String name, ArchiveEntry originalEntry)
 		{
-			if(tempEntry instanceof TarArchiveEntry)
+			if(originalEntry instanceof TarArchiveEntry)
 			{
 				byte flags = 0;
-				if(tempEntry.isDirectory())
+				if(originalEntry.isDirectory())
 				{
 					flags = TarConstants.LF_DIR;
 				}
-				else if(((TarArchiveEntry) tempEntry).isSymbolicLink())
+				else if(((TarArchiveEntry) originalEntry).isSymbolicLink())
 				{
 					flags = TarConstants.LF_SYMLINK;
 				}
-				else if(((TarArchiveEntry) tempEntry).isLink())
+				else if(((TarArchiveEntry) originalEntry).isLink())
 				{
 					flags = TarConstants.LF_LINK;
 				}
@@ -56,12 +57,40 @@ public abstract class ArchiveEntryWrapper<E extends ArchiveEntry>
 					flags = TarConstants.LF_NORMAL;
 				}
 
-				String link = ((TarArchiveEntry) tempEntry).getLinkName();
+				String link = ((TarArchiveEntry) originalEntry).getLinkName();
 				final TarArchiveEntry entry = new TarArchiveEntry(name, flags);
 				if(link != null)
 				{
 					entry.setLinkName(link);
 				}
+				return entry;
+			}
+			else if(originalEntry instanceof CpioArchiveEntry)
+			{
+				byte flags = 0;
+				if(originalEntry.isDirectory())
+				{
+					flags = TarConstants.LF_DIR;
+				}
+				else if(((CpioArchiveEntry) originalEntry).isSymbolicLink())
+				{
+					flags = TarConstants.LF_SYMLINK;
+				}
+//				else if(((CpioArchiveEntry) originalEntry).isLink())
+//				{
+//					flags = TarConstants.LF_LINK;
+//				}
+				else
+				{
+					flags = TarConstants.LF_NORMAL;
+				}
+
+//				String link = ((CpioArchiveEntry) originalEntry).getLinkName();
+				final TarArchiveEntry entry = new TarArchiveEntry(name, flags);
+//				if(link != null)
+//				{
+//					entry.setLinkName(link);
+//				}
 				return entry;
 			}
 			return new TarArchiveEntry(name);
