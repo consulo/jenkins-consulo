@@ -51,7 +51,7 @@ public class ConsuloArtifactPostTask extends Notifier
 		@Override
 		public String getDisplayName()
 		{
-			return "Create Consulo artifacts";
+			return "Consulo/Create platform artifacts";
 		}
 
 		@Override

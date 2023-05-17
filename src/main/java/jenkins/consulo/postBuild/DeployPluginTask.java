@@ -21,10 +21,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.maven.MavenModule;
 import hudson.maven.MavenModuleSet;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Result;
+import hudson.model.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -43,7 +40,7 @@ public class DeployPluginTask extends DeployArtifactTaskBase
 		@Override
 		public String getDisplayName()
 		{
-			return "Deploy plugin artifacts to repository (Consulo)";
+			return "Consulo/Deploy plugin artifacts to repository";
 		}
 	}
 
@@ -61,6 +58,8 @@ public class DeployPluginTask extends DeployArtifactTaskBase
 		{
 			throw new IOException("Project is not build");
 		}
+
+		JobProperty property = build.getProject().getProperty("com.coravy.hudson.plugins.github.GithubProjectProperty");
 
 		int artifactCount = 0;
 

@@ -41,7 +41,7 @@ public class DeployPlatformTask extends DeployArtifactTaskBase
 		@Override
 		public String getDisplayName()
 		{
-			return "Deploy platform artifacts to repository (Consulo)";
+			return "Consulo/Deploy platform artifacts to repository";
 		}
 	}
 
