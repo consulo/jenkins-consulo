@@ -59,8 +59,6 @@ public class DeployPluginTask extends DeployArtifactTaskBase
 			throw new IOException("Project is not build");
 		}
 
-		JobProperty property = build.getProject().getProperty("com.coravy.hudson.plugins.github.GithubProjectProperty");
-
 		int artifactCount = 0;
 
 		FilePath workspace = build.getWorkspace();
