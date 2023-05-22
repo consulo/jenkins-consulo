@@ -19,8 +19,13 @@ package jenkins.consulo.postBuild.consuloArtifactTask;
 import com.Ostermiller.util.BinaryDataException;
 import com.Ostermiller.util.LineEnds;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.BuildListener;
 import jakarta.annotation.Nullable;
+import jenkins.consulo.postBuild.consuloArtifactTask.jre.ArchiveEntryWrapper;
+import jenkins.consulo.postBuild.consuloArtifactTask.jre.ArchivedBundledJRE;
+import jenkins.consulo.postBuild.consuloArtifactTask.jre.BundledJRE;
+import jenkins.consulo.postBuild.consuloArtifactTask.jre.LocalBundledJRE;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
@@ -35,13 +40,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author VISTALL
  * @since 2019-11-17
  */
-public abstract class Generator
+public class Generator
 {
 	private static final String[] ourExecutable = new String[]{
 			// linux
@@ -57,7 +61,7 @@ public abstract class Generator
 			"Consulo.app/Contents/MacOS/consulo",
 	};
 
-	protected static final String ourBuildSNAPSHOT = "buildSNAPSHOT";
+	public static final String ourBuildSNAPSHOT = "buildSNAPSHOT";
 
 	protected FilePath myDistPath;
 	protected FilePath myTargetDir;
@@ -74,10 +78,8 @@ public abstract class Generator
 		myListener = listener;
 	}
 
-	public void buildDistributionInArchive(String distZip, @Nullable String jdkArchivePathOrUrl, String path, String archiveOutType) throws Exception
+	private FilePath prepareJre(@Nullable String jdkArchivePathOrUrl) throws Exception
 	{
-		FilePath jdkArchivePath;
-
 		if(jdkArchivePathOrUrl != null && jdkArchivePathOrUrl.startsWith("https://"))
 		{
 			myListener.getLogger().println("JRE: downloading " + jdkArchivePathOrUrl);
@@ -103,12 +105,63 @@ public abstract class Generator
 
 			jreFileArchiveFile.copyFrom(jreUrl);
 
-			jdkArchivePath = jreFileArchiveFile;
+			return jreFileArchiveFile;
 		}
 		else
 		{
-			jdkArchivePath = jdkArchivePathOrUrl == null ? null : new FilePath(new File(jdkArchivePathOrUrl));
+			return jdkArchivePathOrUrl == null ? null : new FilePath(new File(jdkArchivePathOrUrl));
 		}
+	}
+
+	public void buildWindowsInstaller(FilePath workspace, String distZip, @Nullable String jdkArchivePathOrUrl, String nsisPath, String artifactId) throws Exception
+	{
+		FilePath jdkArchivePath = prepareJre(jdkArchivePathOrUrl);
+
+		myListener.getLogger().println("Build: " + artifactId);
+
+		FilePath nsisDistroPath = myTargetDir.child(artifactId);
+		nsisDistroPath.mkdirs();
+
+		final FilePath fileZip = myDistPath.child(distZip);
+
+		FilePath nsisWorkspaceDir = workspace.child(nsisPath);
+
+		nsisWorkspaceDir.copyRecursiveTo(nsisDistroPath);
+
+		fileZip.unzip(nsisDistroPath);
+
+		LocalBundledJRE bundledJRE = new LocalBundledJRE(myBuildNumber, new ArchiveStreamFactory(), jdkArchivePath, false, nsisDistroPath);
+		bundledJRE.build();
+
+		FilePath[] nsisScripts = nsisDistroPath.list("*.nsi");
+		if(nsisScripts.length != 1)
+		{
+			throw new IllegalArgumentException("Required NSIS script");
+		}
+
+		Launcher launcher = nsisDistroPath.createLauncher(myListener);
+		Launcher.ProcStarter launch = launcher.launch();
+		launch.cmds("makensis", nsisScripts[0].getName());
+		launch.pwd(nsisDistroPath);
+		launch.stdout(myListener);
+		int exitCode = launch.join();
+		if(exitCode != 0)
+		{
+			throw new IllegalArgumentException("Failed to create installer");
+		}
+
+		String fileName = artifactId + ".exe";
+
+		FilePath exeFile = nsisDistroPath.child(fileName);
+		// now we move exe file to parent dir
+		exeFile.copyTo(myTargetDir.child(fileName));
+		// remove this temp dir
+		nsisDistroPath.deleteRecursive();
+	}
+
+	public void buildDistributionInArchive(String distZip, @Nullable String jdkArchivePathOrUrl, String path, String archiveOutType) throws Exception
+	{
+		FilePath jdkArchivePath = prepareJre(jdkArchivePathOrUrl);
 
 		myListener.getLogger().println("Build: " + path);
 
@@ -134,7 +187,7 @@ public abstract class Generator
 					ArchiveEntry tempEntry = ais.getNextEntry();
 					while(tempEntry != null)
 					{
-						final ArchiveEntryWrapper newEntry = createEntry(archiveOutType, tempEntry.getName(), tempEntry);
+						final ArchiveEntryWrapper<? extends ArchiveEntry> newEntry = createEntry(archiveOutType, tempEntry.getName(), tempEntry);
 
 						newEntry.setMode(extractMode(tempEntry));
 						newEntry.setTime(tempEntry.getLastModifiedDate().getTime());
@@ -162,18 +215,11 @@ public abstract class Generator
 		}
 	}
 
-	protected abstract void buildBundledJRE(FilePath jdkArchivePath, ArchiveStreamFactory factory, String archiveOutType, ArchiveOutputStream archiveOutputStream, boolean mac) throws Exception;
-
-	protected static boolean needAddToArchive(String name, Set<String> paths)
+	protected void buildBundledJRE(FilePath jdkArchivePath, ArchiveStreamFactory factory, String archiveOutType, ArchiveOutputStream archiveOutputStream, boolean mac) throws Exception
 	{
-		for(String prefix : paths)
-		{
-			if(name.startsWith(prefix))
-			{
-				return false;
-			}
-		}
-		return true;
+		BundledJRE bundledJRE = new ArchivedBundledJRE(myBuildNumber, factory, jdkArchivePath, mac, archiveOutType, archiveOutputStream);
+
+		bundledJRE.build();
 	}
 
 	protected static int extractMode(ArchiveEntry entry)
@@ -185,7 +231,7 @@ public abstract class Generator
 		return entry.isDirectory() ? TarArchiveEntry.DEFAULT_DIR_MODE : TarArchiveEntry.DEFAULT_FILE_MODE;
 	}
 
-	protected static void copyEntry(ArchiveOutputStream archiveOutputStream, ArchiveInputStream ais, ArchiveEntry tempEntry, ArchiveEntryWrapper newEntry) throws IOException
+	protected static void copyEntry(ArchiveOutputStream archiveOutputStream, ArchiveInputStream ais, ArchiveEntry tempEntry, ArchiveEntryWrapper<? extends ArchiveEntry> newEntry) throws IOException
 	{
 		byte[] data = null;
 		if(!tempEntry.isDirectory())
@@ -215,7 +261,7 @@ public abstract class Generator
 			newEntry.setSize(data.length);
 		}
 
-		archiveOutputStream.putArchiveEntry(newEntry.getArchiveEntry());
+		archiveOutputStream.putArchiveEntry(newEntry.getItem());
 
 		if(data != null)
 		{
@@ -225,7 +271,7 @@ public abstract class Generator
 		archiveOutputStream.closeArchiveEntry();
 	}
 
-	protected ArchiveEntryWrapper createEntry(String type, String name, ArchiveEntry tempEntry)
+	protected ArchiveEntryWrapper<? extends ArchiveEntry> createEntry(String type, String name, ArchiveEntry tempEntry)
 	{
 		name = replaceBuildDirectory(name);
 

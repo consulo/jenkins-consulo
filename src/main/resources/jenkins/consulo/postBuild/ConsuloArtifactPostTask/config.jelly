@@ -23,6 +23,9 @@
 	<f:entry title="Windows JRE x64 Path/URL" field="winJre64Path">
 		<f:textbox/>
 	</f:entry>
+	<f:entry title="Windows x64 NSIS File" field="winJre64Nsis">
+		<f:textbox/>
+	</f:entry>
 	<f:entry title="Windows JRE AARCH64 Path/URL" field="winJreA64Path">
 		<f:textbox/>
 	</f:entry>

@@ -25,8 +25,6 @@ import hudson.model.Result;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 
 /**
@@ -44,21 +42,6 @@ public class DeployPlatformTask extends DeployArtifactTaskBase
 			return "Consulo/Deploy platform artifacts to repository";
 		}
 	}
-
-	private static final Collection<String> ourAllowedArtifacts = Arrays.asList(
-			// win
-			"consulo-win-no-jre.tar.gz",
-			"consulo-win.tar.gz",
-			"consulo-win64.tar.gz",
-			"consulo-winA64.tar.gz",
-			// linux
-			"consulo-linux-no-jre.tar.gz",
-			"consulo-linux.tar.gz",
-			"consulo-linux64.tar.gz",
-			// mac
-			"consulo-mac-no-jre.tar.gz",
-			"consulo-mac64.tar.gz"
-	);
 
 	@DataBoundConstructor
 	public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel, boolean allowUnstable)
@@ -87,7 +70,14 @@ public class DeployPlatformTask extends DeployArtifactTaskBase
 		int artifactCount = 0;
 		for(FilePath artifactPath : allArtifactsDir.list())
 		{
-			if(!ourAllowedArtifacts.contains(artifactPath.getName()))
+			if(artifactPath.isDirectory())
+			{
+				continue;
+			}
+
+			String baseName = artifactPath.getBaseName();
+
+			if(!baseName.startsWith("consulo.dist."))
 			{
 				continue;
 			}
