@@ -19,11 +19,11 @@ package jenkins.consulo.postBuild;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import jakarta.annotation.Nonnull;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.StringReader;
 

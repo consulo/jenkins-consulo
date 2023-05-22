@@ -20,6 +20,7 @@ import com.Ostermiller.util.BinaryDataException;
 import com.Ostermiller.util.LineEnds;
 import hudson.FilePath;
 import hudson.model.BuildListener;
+import jakarta.annotation.Nullable;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
@@ -29,7 +30,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;

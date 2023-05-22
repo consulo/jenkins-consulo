@@ -31,6 +31,8 @@ public abstract class DeployDescriptorBase extends BuildStepDescriptor<Publisher
 {
 	private String oauthKey;
 
+	private String jenkinsPassword;
+
 	public DeployDescriptorBase()
 	{
 		load();
@@ -41,15 +43,23 @@ public abstract class DeployDescriptorBase extends BuildStepDescriptor<Publisher
 		return oauthKey;
 	}
 
-	public void setOauthKey(String oauthKey)
+	public String getJenkinsPassword()
+	{
+		return jenkinsPassword;
+	}
+
+	public void setOauthKey(String oauthKey, String jenkinsPassword)
 	{
 		this.oauthKey = oauthKey;
+		this.jenkinsPassword = jenkinsPassword;
 	}
 
 	@Override
 	public boolean configure(StaplerRequest req, JSONObject json) throws FormException
 	{
 		oauthKey = json.getJSONObject("consulo").getString("oauthKey");
+
+		jenkinsPassword = json.getJSONObject("consulo").getString("jenkinsPassword");
 
 		save();
 

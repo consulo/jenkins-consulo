@@ -16,23 +16,27 @@
 
 package jenkins.consulo.postBuild;
 
+import com.coravy.hudson.plugins.github.GithubProjectProperty;
 import com.google.gson.Gson;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.User;
+import hudson.plugins.git.Revision;
+import hudson.plugins.git.util.BuildData;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -40,10 +44,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author VISTALL
@@ -64,9 +65,16 @@ public abstract class DeployArtifactTaskBase extends Notifier
 		this.allowUnstable = allowUnstable;
 	}
 
-	protected int deployArtifact(String urlSuffix, Map<String, String> parameters, FilePath artifactPath, BuildListener listener, AbstractBuild<?, ?> build, int artifactCount) throws IOException, InterruptedException
+	protected int deployArtifact(String urlSuffix,
+								 Map<String, String> parameters,
+								 FilePath artifactPath,
+								 BuildListener listener,
+								 AbstractBuild<?, ?> build,
+								 int artifactCount) throws IOException, InterruptedException
 	{
 		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey();
+		String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword();
+
 		String repoUrl = enableRepositoryUrl ? repositoryUrl : "https://api.consulo.io/repository/";
 
 		StringBuilder builder = new StringBuilder(repoUrl);
@@ -95,33 +103,78 @@ public abstract class DeployArtifactTaskBase extends Notifier
 			builder.append(entry.getValue());
 		}
 
-		PostMethod postMethod = new PostMethod(builder.toString());
-		postMethod.addRequestHeader("Authorization", "Bearer " + deployKey);
-
-		List<PluginHistoryEntry> pluginHistoryEntries = buildChangeSet(build);
-
-		String historyJson = new Gson().toJson(pluginHistoryEntries);
-
-		InputStream inputStream = artifactPath.read();
-		Part[] parts = {
-				new FilePart("file", new ByteArrayPartSource(artifactPath.getName(), IOUtils.toByteArray(inputStream))),
-				new FilePart("history", new ByteArrayPartSource("history.json", historyJson.getBytes(StandardCharsets.UTF_8)))
-		};
-		IOUtils.closeQuietly(inputStream);
-
-		MultipartRequestEntity entity = new MultipartRequestEntity(parts, postMethod.getParams());
-		postMethod.setRequestEntity(entity);
-
-		HttpClient client = new HttpClient();
-		client.getParams().setSoTimeout(5 * 60000);
-
-		int i = client.executeMethod(postMethod);
-		if(i != HttpServletResponse.SC_OK)
+		GithubInfo githubInfo = null;
+		GithubProjectProperty property = build.getProject().getProperty(GithubProjectProperty.class);
+		if(property != null)
 		{
-			throw new IOException("Failed to deploy artifact " + artifactPath.getName() + ", Status Code: " + i + ", Status Text: " + postMethod.getStatusText());
+			String projectUrl = property.getProjectUrlStr();
+			String commitSha1 = null;
+
+			BuildData action = build.getAction(BuildData.class);
+			if(action != null)
+			{
+				Revision lastBuiltRevision = action.getLastBuiltRevision();
+				if(lastBuiltRevision != null)
+				{
+					commitSha1 = lastBuiltRevision.getSha1String();
+				}
+			}
+
+			if(projectUrl != null && commitSha1 != null)
+			{
+				githubInfo = new GithubInfo(projectUrl, commitSha1);
+			}
 		}
 
-		listener.getLogger().println("Deployed artifact: " + artifactPath.getName());
+		List<PluginHistoryEntry> pluginHistoryEntries = buildChangeSet(build);
+		Gson gson = new Gson();
+
+		InputStream contentStream;
+		try (CloseableHttpClient client = HttpClients.createMinimal())
+		{
+			HttpPost request = new HttpPost(builder.toString());
+			if(!StringUtils.isBlank(jenkinsPassword))
+			{
+				String serviceAccount = "jenkins@consulo.io";
+				String basicAuth = serviceAccount + ":" + jenkinsPassword;
+				request.addHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(basicAuth.getBytes(StandardCharsets.UTF_8)));
+			}
+			else
+			{
+				request.addHeader("Authorization", "Bearer " + deployKey);
+			}
+
+			MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+			entityBuilder.addBinaryBody("file", contentStream = artifactPath.read(), ContentType.DEFAULT_BINARY, "file");
+			if(!pluginHistoryEntries.isEmpty())
+			{
+				String historyJson = gson.toJson(pluginHistoryEntries);
+				entityBuilder.addBinaryBody("history", historyJson.getBytes(StandardCharsets.UTF_8), ContentType.DEFAULT_BINARY, "history");
+			}
+
+			if(githubInfo != null)
+			{
+				entityBuilder.addBinaryBody("github", gson.toJson(githubInfo).getBytes(StandardCharsets.UTF_8), ContentType.DEFAULT_BINARY, "history");
+			}
+
+			request.setEntity(entityBuilder.build());
+
+			client.execute(request, r ->
+			{
+				StatusLine line = r.getStatusLine();
+				int statusCode = line.getStatusCode();
+
+				if(statusCode != HttpServletResponse.SC_OK)
+				{
+					throw new IOException("Failed to deploy artifact " + artifactPath.getName() + ", Status Code: " + statusCode + ", Status Text: " + line.getReasonPhrase());
+				}
+
+				listener.getLogger().println("Deployed artifact: " + artifactPath.getName());
+				return null;
+			});
+		}
+
+		IOUtils.closeQuietly(contentStream);
 
 		artifactCount++;
 		return artifactCount;

@@ -18,7 +18,11 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
 	<f:section title="hub.consulo.io Authorization (deploy plugin)" name="consulo">
-		<f:entry title="OAuth Key" field="oauthKey" description="The oauth key">
+		<f:entry title="Password" field="jenkinsPassword">
+			<f:password field="jenkinsPassword"/>
+		</f:entry>
+
+		<f:entry title="OAuth Key" field="oauthKey">
 			<f:password field="oauthKey"/>
 		</f:entry>
 	</f:section>
