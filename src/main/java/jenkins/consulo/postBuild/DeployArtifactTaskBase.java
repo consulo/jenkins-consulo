@@ -75,7 +75,7 @@ public abstract class DeployArtifactTaskBase extends Notifier
 		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey();
 		String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword();
 
-		String repoUrl = enableRepositoryUrl ? repositoryUrl : "https://api.consulo.io/repository/";
+		String repoUrl = enableRepositoryUrl ? repositoryUrl : "http://hub-backend:22333/api/repository/";
 
 		StringBuilder builder = new StringBuilder(repoUrl);
 		if(!repoUrl.endsWith("/"))
@@ -145,7 +145,7 @@ public abstract class DeployArtifactTaskBase extends Notifier
 			}
 
 			MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
-			entityBuilder.addBinaryBody("file", contentStream = artifactPath.read(), ContentType.DEFAULT_BINARY, "file");
+			entityBuilder.addBinaryBody("file", contentStream = artifactPath.read(), ContentType.DEFAULT_BINARY, artifactPath.getName());
 			if(!pluginHistoryEntries.isEmpty())
 			{
 				String historyJson = gson.toJson(pluginHistoryEntries);
