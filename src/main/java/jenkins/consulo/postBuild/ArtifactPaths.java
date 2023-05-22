@@ -16,16 +16,11 @@
 
 package jenkins.consulo.postBuild;
 
-import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import jakarta.annotation.Nonnull;
-import org.dom4j.Document;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
-import java.io.StringReader;
 
 /**
  * @author VISTALL
@@ -33,54 +28,15 @@ import java.io.StringReader;
  */
 public class ArtifactPaths
 {
-	private static final String _2_SNAPSHOT = "2-SNAPSHOT";
 	private static final String _3_SNAPSHOT = "3-SNAPSHOT";
 
 	@Nonnull
 	public static ArtifactPaths find(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException
 	{
-		FilePath workspace = build.getWorkspace();
-
-		// maven project
-		FilePath pom = workspace.child("pom.xml");
-		if(pom.exists())
-		{
-			boolean is3Version = false;
-			try
-			{
-				SAXReader saxBuilder = new SAXReader(false);
-				Document document = saxBuilder.read(new StringReader(pom.readToString()));
-				Element version = document.getRootElement().element("version");
-				if(version != null)
-				{
-					String ver = version.getTextTrim();
-					listener.getLogger().println("Artifact version: " + ver);
-					is3Version = _3_SNAPSHOT.equals(ver);
-				}
-			}
-			catch(Exception ignored)
-			{
-			}
-
-			if(is3Version)
-			{
-				String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win.zip";
-				String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux.zip";
-				String mac = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64.zip";
-				return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, mac);
-			}
-			else
-			{
-				String win = "consulo-bundle-" + _2_SNAPSHOT + "-win.zip";
-				String linux = "consulo-bundle-" + _2_SNAPSHOT + "-linux.zip";
-				String mac = "consulo-bundle-" + _2_SNAPSHOT + "-mac.zip";
-				return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, mac);
-			}
-		}
-		else
-		{
-			return new ArtifactPaths("out/artifacts/all", "out/artifacts/dist", "consulo-win.zip", "consulo-linux.zip", "consulo-mac.zip");
-		}
+		String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win.zip";
+		String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux.zip";
+		String mac = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64.zip";
+		return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, mac);
 	}
 
 	private final String myAllArtifactsPath;
