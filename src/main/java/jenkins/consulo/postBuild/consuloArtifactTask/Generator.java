@@ -53,12 +53,29 @@ public class Generator
 			"Consulo/platform/buildSNAPSHOT/bin/launcher.sh",
 			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier",
 			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier64",
+			// new linux
+			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier",
+			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64",
+			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier-aarch64",
+
 			// mac
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/fsnotifier",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/restarter",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/printenv.py",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/printenv",
 			"Consulo.app/Contents/MacOS/consulo",
+
+			// new mac
+			"Consulo.app/Contents/MacOS/consulo64",
+			"Consulo.app/Contents/MacOS/consulo-aarch64",
+			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier",
+			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64",
+			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64-aarch64",
+			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/restarter",
+			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/restarter64",
+			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/printenv",
+			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/printenv64",
+			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/printenv-aarch64",
 	};
 
 	public static final String ourBuildSNAPSHOT = "buildSNAPSHOT";
