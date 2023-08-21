@@ -68,14 +68,14 @@ public class Generator
 			// new mac
 			"Consulo.app/Contents/MacOS/consulo64",
 			"Consulo.app/Contents/MacOS/consulo-aarch64",
-			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier",
-			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64",
-			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64-aarch64",
-			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/restarter",
-			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/restarter64",
-			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/printenv",
-			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/printenv64",
-			"Consulo.app/platform/buildSNAPSHOT/modules/consulo/native/printenv-aarch64",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64-aarch64",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/restarter",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/restarter64",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv64",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv-aarch64",
 	};
 
 	public static final String ourBuildSNAPSHOT = "buildSNAPSHOT";
