@@ -19,14 +19,21 @@ package jenkins.consulo.postBuild;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.maven.MavenBuild;
 import hudson.maven.MavenModule;
 import hudson.maven.MavenModuleSet;
-import hudson.model.*;
+import hudson.maven.MavenModuleSetBuild;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Result;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author VISTALL
@@ -70,6 +77,10 @@ public class DeployPluginTask extends DeployArtifactTaskBase
 		AbstractProject<?, ?> project = build.getProject();
 		if(project instanceof MavenModuleSet)
 		{
+			MavenModuleSetBuild mavenModuleSetBuild = (MavenModuleSetBuild) build;
+
+			Map<MavenModule, List<MavenBuild>> moduleBuilds = mavenModuleSetBuild.getModuleBuilds();
+
 			listener.getLogger().println("Deploying mavenize plugins");
 
 			Collection<MavenModule> modules = ((MavenModuleSet) project).getModules();
@@ -77,6 +88,13 @@ public class DeployPluginTask extends DeployArtifactTaskBase
 			{
 				if(module.isDisabled())
 				{
+					continue;
+				}
+
+				List<MavenBuild> builds = moduleBuilds.getOrDefault(module, List.of());
+				if(builds.isEmpty())
+				{
+					// not build
 					continue;
 				}
 
