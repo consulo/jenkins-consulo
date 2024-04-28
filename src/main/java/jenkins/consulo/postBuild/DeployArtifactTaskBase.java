@@ -72,7 +72,7 @@ public abstract class DeployArtifactTaskBase extends Notifier
 								 AbstractBuild<?, ?> build,
 								 int artifactCount) throws IOException, InterruptedException
 	{
-		listener.getLogger().println("Deploying artifact: " + artifactPath.getName());
+		listener.getLogger().println("Deploying artifact: " + artifactPath.getRemote());
 
 		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey();
 		String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword();
@@ -168,10 +168,10 @@ public abstract class DeployArtifactTaskBase extends Notifier
 
 				if(statusCode != HttpServletResponse.SC_OK)
 				{
-					throw new IOException("Failed to deploy artifact " + artifactPath.getName() + ", Status Code: " + statusCode + ", Status Text: " + line.getReasonPhrase());
+					throw new IOException("Failed to deploy artifact " + artifactPath.getRemote() + ", Status Code: " + statusCode + ", Status Text: " + line.getReasonPhrase());
 				}
 
-				listener.getLogger().println("Deployed artifact: " + artifactPath.getName());
+				listener.getLogger().println("Deployed artifact: " + artifactPath.getRemote());
 				return null;
 			});
 		}
