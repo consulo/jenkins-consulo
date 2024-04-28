@@ -28,5 +28,6 @@ public enum  PluginChannel
 	nightly, // every commit
 
 	// consulo 3 branch
+	@Deprecated
 	valhalla
 }

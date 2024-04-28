@@ -72,6 +72,8 @@ public abstract class DeployArtifactTaskBase extends Notifier
 								 AbstractBuild<?, ?> build,
 								 int artifactCount) throws IOException, InterruptedException
 	{
+		listener.getLogger().println("Deploying artifact: " + artifactPath.getName());
+
 		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey();
 		String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword();
 
