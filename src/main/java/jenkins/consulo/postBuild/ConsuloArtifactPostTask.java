@@ -19,10 +19,18 @@ package jenkins.consulo.postBuild;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.*;
-import hudson.tasks.*;
-import jenkins.consulo.postBuild.consuloArtifactTask.JRE11Generator;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Notifier;
+import hudson.tasks.Publisher;
+import jakarta.annotation.Nonnull;
+import jenkins.consulo.postBuild.consuloArtifactTask.Generator;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -41,6 +49,7 @@ public class ConsuloArtifactPostTask extends Notifier
 			load();
 		}
 
+		@Nonnull
 		@Override
 		public String getDisplayName()
 		{
@@ -57,22 +66,38 @@ public class ConsuloArtifactPostTask extends Notifier
 	private String winJre32Path;
 	private String winJre64Path;
 	private String winJreA64Path;
+
 	private String linuxJre32Path;
 	private String linuxJre64Path;
+	private String linuxJreA64Path;
+
 	private String macJre64Path;
+	private String macJreA64Path;
 
 	private String winJre64Nsis;
 
 	@DataBoundConstructor
-	public ConsuloArtifactPostTask(
-			String winJre32Path, String winJreA64Path, String winJre64Path, String linuxJre32Path, String linuxJre64Path, String macJre64Path, String winJre64Nsis)
+	public ConsuloArtifactPostTask(String winJre32Path,
+								   String winJreA64Path,
+								   String winJre64Path,
+								   String linuxJre32Path,
+								   String linuxJre64Path,
+								   String linuxJreA64Path,
+								   String macJre64Path,
+								   String macJreA64Path,
+								   String winJre64Nsis)
 	{
 		this.winJre32Path = winJre32Path;
 		this.winJre64Path = winJre64Path;
 		this.winJreA64Path = winJreA64Path;
+
 		this.linuxJre32Path = linuxJre32Path;
 		this.linuxJre64Path = linuxJre64Path;
+		this.linuxJreA64Path = linuxJreA64Path;
+
 		this.macJre64Path = macJre64Path;
+		this.macJreA64Path = macJreA64Path;
+
 		this.winJre64Nsis = winJre64Nsis;
 	}
 
@@ -109,6 +134,16 @@ public class ConsuloArtifactPostTask extends Notifier
 	public String getWinJre64Nsis()
 	{
 		return winJre64Nsis;
+	}
+
+	public String getMacJreA64Path()
+	{
+		return macJreA64Path;
+	}
+
+	public String getLinuxJreA64Path()
+	{
+		return linuxJreA64Path;
 	}
 
 	@Override
@@ -158,7 +193,7 @@ public class ConsuloArtifactPostTask extends Notifier
 			jreDirectory.mkdirs();
 		}
 
-		JRE11Generator generator = new JRE11Generator(distDir, targetDir, jreDirectory, build.getNumber(), listener);
+		Generator generator = new Generator(distDir, targetDir, jreDirectory, build.getNumber(), listener);
 
 		try
 		{
@@ -167,7 +202,7 @@ public class ConsuloArtifactPostTask extends Notifier
 			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo.dist.windows.no.jre", ArchiveStreamFactory.TAR);  // archive for platformDeploy
 
 			// win 32 bit
-			if(winJre32Path != null && !winJre32Path.isEmpty())
+			if(!StringUtils.isBlank(winJre32Path))
 			{
 				generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo.dist.windows", ArchiveStreamFactory.ZIP);
 				generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo.dist.windows.zip", ArchiveStreamFactory.TAR); // archive for platformDeploy
@@ -177,14 +212,14 @@ public class ConsuloArtifactPostTask extends Notifier
 			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo.dist.windows64.zip", ArchiveStreamFactory.ZIP);
 			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo.dist.windows64", ArchiveStreamFactory.TAR); // archive for platformDeploy
 
-			if(winJre64Nsis != null && !winJre64Nsis.isEmpty())
+			if(!StringUtils.isBlank(winJre64Nsis))
 			{
 				// distribution/src\nsis/x64
 				generator.buildWindowsInstaller(build.getWorkspace(), artifactPaths.getWin(), winJre64Path, winJre64Nsis, "consulo.dist.windows64.installer");
 			}
 
 			// win A64 bit
-			if(winJreA64Path != null && !winJreA64Path.isEmpty())
+			if(!StringUtils.isBlank(winJreA64Path))
 			{
 				generator.buildDistributionInArchive(artifactPaths.getWin(), winJreA64Path, "consulo.dist.windowsA64.zip", ArchiveStreamFactory.ZIP);
 				generator.buildDistributionInArchive(artifactPaths.getWin(), winJreA64Path, "consulo.dist.windowsA64", ArchiveStreamFactory.TAR); // archive for platformDeploy
@@ -194,15 +229,28 @@ public class ConsuloArtifactPostTask extends Notifier
 			generator.buildDistributionInArchive(artifactPaths.getLinux(), null, "consulo.dist.linux.no.jre", ArchiveStreamFactory.TAR);
 
 			// linux x86
-			if(linuxJre32Path != null && !linuxJre32Path.isEmpty())
+			if(!StringUtils.isBlank(linuxJre32Path))
 			{
 				generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre32Path, "consulo.dist.linux", ArchiveStreamFactory.TAR);
 			}
+
+			// linux A64
+			if(!StringUtils.isBlank(linuxJreA64Path))
+			{
+				generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJreA64Path, "consulo.dist.linuxA64", ArchiveStreamFactory.TAR);
+			}
+
 			generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre64Path, "consulo.dist.linux64", ArchiveStreamFactory.TAR);
 
 			// mac
-			generator.buildDistributionInArchive(artifactPaths.getMac64(), null, "consulo.dist.mac64.no.jre", ArchiveStreamFactory.TAR);
-			generator.buildDistributionInArchive(artifactPaths.getMac64(), macJre64Path, "consulo.dist.mac64", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getMacX64(), null, "consulo.dist.mac64.no.jre", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.getMacX64(), macJre64Path, "consulo.dist.mac64", ArchiveStreamFactory.TAR);
+
+			if(!StringUtils.isBlank(macJreA64Path))
+			{
+				generator.buildDistributionInArchive(artifactPaths.getMacA64(), null, "consulo.dist.macA64.no.jre", ArchiveStreamFactory.TAR);
+				generator.buildDistributionInArchive(artifactPaths.getMacA64(), macJreA64Path, "consulo.dist.macA64", ArchiveStreamFactory.TAR);
+			}
 		}
 		catch(Exception throwable)
 		{

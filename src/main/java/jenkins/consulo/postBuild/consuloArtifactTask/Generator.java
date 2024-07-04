@@ -53,6 +53,7 @@ public class Generator
 			"Consulo/platform/buildSNAPSHOT/bin/launcher.sh",
 			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier",
 			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier64",
+			"Consulo/platform/buildSNAPSHOT/bin/fsnotifier-aarch64",
 			// new linux
 			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier",
 			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64",
@@ -60,10 +61,13 @@ public class Generator
 
 			// mac
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/fsnotifier",
-			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/restarter",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/fsnotifier-aarch64",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/restarter-aarch64",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/printenv.py",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/printenv",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/printenv-aarch64",
 			"Consulo.app/Contents/MacOS/consulo",
+			"Consulo.app/Contents/MacOS/consulo-aarch64",
 
 			// new mac
 			"Consulo.app/Contents/MacOS/consulo64",
@@ -73,6 +77,7 @@ public class Generator
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64-aarch64",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/restarter",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/restarter64",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/restarter64-aarch64",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv64",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv-aarch64",

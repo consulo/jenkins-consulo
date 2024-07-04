@@ -35,7 +35,13 @@
 	<f:entry title="Linux JRE x64 Path/URL" field="linuxJre64Path">
 		<f:textbox/>
 	</f:entry>
+	<f:entry title="Linux JRE AARCH64 Path/URL" field="linuxJreA64Path">
+		<f:textbox/>
+	</f:entry>
 	<f:entry title="Mac JRE x64 Path/URL" field="macJre64Path">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Mac JRE AARCH64 Path/URL" field="macJreA64Path">
 		<f:textbox/>
 	</f:entry>
 </j:jelly>

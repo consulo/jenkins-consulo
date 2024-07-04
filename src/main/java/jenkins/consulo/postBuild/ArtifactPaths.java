@@ -35,24 +35,27 @@ public class ArtifactPaths
 	{
 		String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win.zip";
 		String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux.zip";
-		String mac = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64.zip";
-		return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, mac);
+		String macX64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64.zip";
+		String macA64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-aarch64.zip";
+		return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, macX64, macA64);
 	}
 
 	private final String myAllArtifactsPath;
 	private final String myRawArtifactsPath;
 
-	private String myWin;
-	private String myLinux;
-	private String myMac64;
+	private final String myWin;
+	private final String myLinux;
+	private final String myMac64;
+	private final String myMacA64;
 
-	private ArtifactPaths(String allArtifactsPath, String rawArtifactsPath, String win, String linux, String mac64)
+	private ArtifactPaths(String allArtifactsPath, String rawArtifactsPath, String win, String linux, String mac64, String macA64)
 	{
 		myAllArtifactsPath = allArtifactsPath;
 		myRawArtifactsPath = rawArtifactsPath;
 		myWin = win;
 		myLinux = linux;
 		myMac64 = mac64;
+		myMacA64 = macA64;
 	}
 
 	public String getWin()
@@ -65,9 +68,14 @@ public class ArtifactPaths
 		return myLinux;
 	}
 
-	public String getMac64()
+	public String getMacX64()
 	{
 		return myMac64;
+	}
+
+	public String getMacA64()
+	{
+		return myMacA64;
 	}
 
 	public String getAllArtifactsPath()
