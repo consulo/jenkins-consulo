@@ -72,12 +72,13 @@ public class Generator
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier-aarch64",
-			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/restarter",
-			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/restarter64",
-			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/restarter-aarch64",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv64",
 			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo/native/printenv-aarch64",
+
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo.desktop.awt/native/restarter",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo.desktop.awt/native/restarter64",
+			"Consulo.app/Contents/platform/buildSNAPSHOT/modules/consulo.desktop.awt/native/restarter-aarch64",
 	};
 
 	public static final String ourBuildSNAPSHOT = "buildSNAPSHOT";
