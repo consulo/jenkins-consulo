@@ -133,7 +133,7 @@ public class Generator
 		}
 	}
 
-	public void buildWindowsInstaller(FilePath workspace, String distZip, @Nullable String jdkArchivePathOrUrl, String nsisPath, String artifactId) throws Exception
+	public void buildWindowsInstaller(FilePath workspace, String artifactName, @Nullable String jdkArchivePathOrUrl, String nsisPath, String artifactId) throws Exception
 	{
 		FilePath jdkArchivePath = prepareJre(jdkArchivePathOrUrl);
 
@@ -142,7 +142,20 @@ public class Generator
 		FilePath nsisDistroPath = myTargetDir.child(artifactId);
 		nsisDistroPath.mkdirs();
 
-		final FilePath fileZip = myDistPath.child(distZip);
+		String zipArtifactName = artifactName + ".zip";
+
+		FilePath fileZip = myDistPath.child(zipArtifactName);
+		if(!fileZip.exists())
+		{
+			FilePath artifactDir = myDistPath.child(artifactName);
+			if(!artifactDir.exists())
+			{
+				throw new IllegalArgumentException(artifactDir + " not exists");
+			}
+
+			// make zip archive for processing - legacy processing from zip
+			artifactDir.zip(fileZip);
+		}
 
 		FilePath nsisWorkspaceDir = workspace.child(nsisPath);
 
