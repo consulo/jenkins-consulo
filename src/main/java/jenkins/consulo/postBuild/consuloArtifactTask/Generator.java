@@ -142,20 +142,7 @@ public class Generator
 		FilePath nsisDistroPath = myTargetDir.child(artifactId);
 		nsisDistroPath.mkdirs();
 
-		String zipArtifactName = artifactName + ".zip";
-
-		FilePath fileZip = myDistPath.child(zipArtifactName);
-		if(!fileZip.exists())
-		{
-			FilePath artifactDir = myDistPath.child(artifactName);
-			if(!artifactDir.exists())
-			{
-				throw new IllegalArgumentException(artifactDir + " not exists");
-			}
-
-			// make zip archive for processing - legacy processing from zip
-			artifactDir.zip(fileZip);
-		}
+		FilePath fileZip = getOrCreateZip(artifactName);
 
 		FilePath nsisWorkspaceDir = workspace.child(nsisPath);
 
@@ -192,14 +179,8 @@ public class Generator
 		nsisDistroPath.deleteRecursive();
 	}
 
-	public void buildDistributionInArchive(String artifactName, @Nullable String jdkArchivePathOrUrl, String path, String archiveOutType) throws Exception
+	private FilePath getOrCreateZip(String artifactName) throws Exception
 	{
-		FilePath jdkArchivePath = prepareJre(jdkArchivePathOrUrl);
-
-		myListener.getLogger().println("Build: " + path);
-
-		ArchiveStreamFactory factory = new ArchiveStreamFactory();
-
 		String zipArtifactName = artifactName + ".zip";
 
 		FilePath fileZip = myDistPath.child(zipArtifactName);
@@ -211,9 +192,28 @@ public class Generator
 				throw new IllegalArgumentException(artifactDir + " not exists");
 			}
 
+			boolean mac = artifactName.contains("-mac-");
+
+			String childDir = mac ? "Consulo.app" : "Consulo";
+
+			FilePath targetDir = artifactDir.child(childDir);
+
 			// make zip archive for processing - legacy processing from zip
-			artifactDir.zip(fileZip);
+			targetDir.zip(fileZip);
 		}
+
+		return fileZip;
+	}
+
+	public void buildDistributionInArchive(String artifactName, @Nullable String jdkArchivePathOrUrl, String path, String archiveOutType) throws Exception
+	{
+		FilePath jdkArchivePath = prepareJre(jdkArchivePathOrUrl);
+
+		myListener.getLogger().println("Build: " + path);
+
+		ArchiveStreamFactory factory = new ArchiveStreamFactory();
+
+		FilePath fileZip = getOrCreateZip(artifactName);
 
 		final List<String> executables = Arrays.asList(ourExecutable);
 
