@@ -179,7 +179,7 @@ public class Generator
 		nsisDistroPath.deleteRecursive();
 	}
 
-	public void buildDistributionInArchive(String distZip, @Nullable String jdkArchivePathOrUrl, String path, String archiveOutType) throws Exception
+	public void buildDistributionInArchive(String artifactName, @Nullable String jdkArchivePathOrUrl, String path, String archiveOutType) throws Exception
 	{
 		FilePath jdkArchivePath = prepareJre(jdkArchivePathOrUrl);
 
@@ -187,7 +187,20 @@ public class Generator
 
 		ArchiveStreamFactory factory = new ArchiveStreamFactory();
 
-		final FilePath fileZip = myDistPath.child(distZip);
+		String zipArtifactName = artifactName + ".zip";
+
+		FilePath fileZip = myDistPath.child(zipArtifactName);
+		if(!fileZip.exists())
+		{
+			FilePath artifactDir = myDistPath.child(artifactName);
+			if(!artifactDir.exists())
+			{
+				throw new IllegalArgumentException(artifactDir + " not exists");
+			}
+
+			// make zip archive for processing - legacy processing from zip
+			artifactDir.zip(fileZip);
+		}
 
 		final List<String> executables = Arrays.asList(ourExecutable);
 
@@ -227,7 +240,7 @@ public class Generator
 			// jdk check
 			if(jdkArchivePath != null)
 			{
-				boolean mac = distZip.contains("mac");
+				boolean mac = artifactName.contains("-mac-");
 				buildBundledJRE(jdkArchivePath, factory, archiveOutType, archiveOutputStream, mac);
 			}
 

@@ -33,10 +33,10 @@ public class ArtifactPaths
 	@Nonnull
 	public static ArtifactPaths find(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException
 	{
-		String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win.zip";
-		String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux.zip";
-		String macX64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64.zip";
-		String macA64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-aarch64.zip";
+		String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win";
+		String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux";
+		String macX64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64";
+		String macA64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-aarch64";
 		return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, macX64, macA64);
 	}
 
@@ -58,22 +58,22 @@ public class ArtifactPaths
 		myMacA64 = macA64;
 	}
 
-	public String getWin()
+	public String winX64ArtifactName()
 	{
 		return myWin;
 	}
 
-	public String getLinux()
+	public String linuxX64ArtifactName()
 	{
 		return myLinux;
 	}
 
-	public String getMacX64()
+	public String macX64ArtifactName()
 	{
 		return myMac64;
 	}
 
-	public String getMacA64()
+	public String macA64ArtifactName()
 	{
 		return myMacA64;
 	}

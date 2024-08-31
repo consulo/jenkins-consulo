@@ -198,58 +198,58 @@ public class ConsuloArtifactPostTask extends Notifier
 		try
 		{
 			// win no jre
-			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo.dist.windows.no.jre.zip", ArchiveStreamFactory.ZIP);
-			generator.buildDistributionInArchive(artifactPaths.getWin(), null, "consulo.dist.windows.no.jre", ArchiveStreamFactory.TAR);  // archive for platformDeploy
+			generator.buildDistributionInArchive(artifactPaths.winX64ArtifactName(), null, "consulo.dist.windows.no.jre.zip", ArchiveStreamFactory.ZIP);
+			generator.buildDistributionInArchive(artifactPaths.winX64ArtifactName(), null, "consulo.dist.windows.no.jre", ArchiveStreamFactory.TAR);  // archive for platformDeploy
 
 			// win 32 bit
 			if(!StringUtils.isBlank(winJre32Path))
 			{
-				generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo.dist.windows", ArchiveStreamFactory.ZIP);
-				generator.buildDistributionInArchive(artifactPaths.getWin(), winJre32Path, "consulo.dist.windows.zip", ArchiveStreamFactory.TAR); // archive for platformDeploy
+				generator.buildDistributionInArchive(artifactPaths.winX64ArtifactName(), winJre32Path, "consulo.dist.windows", ArchiveStreamFactory.ZIP);
+				generator.buildDistributionInArchive(artifactPaths.winX64ArtifactName(), winJre32Path, "consulo.dist.windows.zip", ArchiveStreamFactory.TAR); // archive for platformDeploy
 			}
 
 			// win 64 bit
-			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo.dist.windows64.zip", ArchiveStreamFactory.ZIP);
-			generator.buildDistributionInArchive(artifactPaths.getWin(), winJre64Path, "consulo.dist.windows64", ArchiveStreamFactory.TAR); // archive for platformDeploy
+			generator.buildDistributionInArchive(artifactPaths.winX64ArtifactName(), winJre64Path, "consulo.dist.windows64.zip", ArchiveStreamFactory.ZIP);
+			generator.buildDistributionInArchive(artifactPaths.winX64ArtifactName(), winJre64Path, "consulo.dist.windows64", ArchiveStreamFactory.TAR); // archive for platformDeploy
 
 			if(!StringUtils.isBlank(winJre64Nsis))
 			{
 				// distribution/src\nsis/x64
-				generator.buildWindowsInstaller(build.getWorkspace(), artifactPaths.getWin(), winJre64Path, winJre64Nsis, "consulo.dist.windows64.installer");
+				generator.buildWindowsInstaller(build.getWorkspace(), artifactPaths.winX64ArtifactName(), winJre64Path, winJre64Nsis, "consulo.dist.windows64.installer");
 			}
 
 			// win A64 bit
 			if(!StringUtils.isBlank(winJreA64Path))
 			{
-				generator.buildDistributionInArchive(artifactPaths.getWin(), winJreA64Path, "consulo.dist.windowsA64.zip", ArchiveStreamFactory.ZIP);
-				generator.buildDistributionInArchive(artifactPaths.getWin(), winJreA64Path, "consulo.dist.windowsA64", ArchiveStreamFactory.TAR); // archive for platformDeploy
+				generator.buildDistributionInArchive(artifactPaths.winX64ArtifactName(), winJreA64Path, "consulo.dist.windowsA64.zip", ArchiveStreamFactory.ZIP);
+				generator.buildDistributionInArchive(artifactPaths.winX64ArtifactName(), winJreA64Path, "consulo.dist.windowsA64", ArchiveStreamFactory.TAR); // archive for platformDeploy
 			}
 
 			// linux no jre
-			generator.buildDistributionInArchive(artifactPaths.getLinux(), null, "consulo.dist.linux.no.jre", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.linuxX64ArtifactName(), null, "consulo.dist.linux.no.jre", ArchiveStreamFactory.TAR);
 
 			// linux x86
 			if(!StringUtils.isBlank(linuxJre32Path))
 			{
-				generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre32Path, "consulo.dist.linux", ArchiveStreamFactory.TAR);
+				generator.buildDistributionInArchive(artifactPaths.linuxX64ArtifactName(), linuxJre32Path, "consulo.dist.linux", ArchiveStreamFactory.TAR);
 			}
 
 			// linux A64
 			if(!StringUtils.isBlank(linuxJreA64Path))
 			{
-				generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJreA64Path, "consulo.dist.linuxA64", ArchiveStreamFactory.TAR);
+				generator.buildDistributionInArchive(artifactPaths.linuxX64ArtifactName(), linuxJreA64Path, "consulo.dist.linuxA64", ArchiveStreamFactory.TAR);
 			}
 
-			generator.buildDistributionInArchive(artifactPaths.getLinux(), linuxJre64Path, "consulo.dist.linux64", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.linuxX64ArtifactName(), linuxJre64Path, "consulo.dist.linux64", ArchiveStreamFactory.TAR);
 
 			// mac
-			generator.buildDistributionInArchive(artifactPaths.getMacX64(), null, "consulo.dist.mac64.no.jre", ArchiveStreamFactory.TAR);
-			generator.buildDistributionInArchive(artifactPaths.getMacX64(), macJre64Path, "consulo.dist.mac64", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.macX64ArtifactName(), null, "consulo.dist.mac64.no.jre", ArchiveStreamFactory.TAR);
+			generator.buildDistributionInArchive(artifactPaths.macX64ArtifactName(), macJre64Path, "consulo.dist.mac64", ArchiveStreamFactory.TAR);
 
 			if(!StringUtils.isBlank(macJreA64Path))
 			{
-				generator.buildDistributionInArchive(artifactPaths.getMacA64(), null, "consulo.dist.macA64.no.jre", ArchiveStreamFactory.TAR);
-				generator.buildDistributionInArchive(artifactPaths.getMacA64(), macJreA64Path, "consulo.dist.macA64", ArchiveStreamFactory.TAR);
+				generator.buildDistributionInArchive(artifactPaths.macA64ArtifactName(), null, "consulo.dist.macA64.no.jre", ArchiveStreamFactory.TAR);
+				generator.buildDistributionInArchive(artifactPaths.macA64ArtifactName(), macJreA64Path, "consulo.dist.macA64", ArchiveStreamFactory.TAR);
 			}
 		}
 		catch(Exception throwable)
