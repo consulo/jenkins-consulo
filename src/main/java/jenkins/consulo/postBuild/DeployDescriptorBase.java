@@ -20,6 +20,7 @@ import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -29,40 +30,39 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public abstract class DeployDescriptorBase extends BuildStepDescriptor<Publisher>
 {
-	private String oauthKey;
+	private Secret oauthKey;
 
-	private String jenkinsPassword;
+	private Secret jenkinsPassword;
 
 	public DeployDescriptorBase()
 	{
 		load();
 	}
 
-	public String getOauthKey()
+	public Secret getOauthKey()
 	{
 		return oauthKey;
 	}
 
-	public String getJenkinsPassword()
+	public Secret getJenkinsPassword()
 	{
 		return jenkinsPassword;
 	}
 
-	public void setOauthKey(String oauthKey, String jenkinsPassword)
+	public void setJenkinsPassword(Secret jenkinsPassword)
+	{
+		this.jenkinsPassword = jenkinsPassword;
+	}
+
+	public void setOauthKey(Secret oauthKey)
 	{
 		this.oauthKey = oauthKey;
-		this.jenkinsPassword = jenkinsPassword;
 	}
 
 	@Override
 	public boolean configure(StaplerRequest req, JSONObject json) throws FormException
 	{
-		oauthKey = json.getJSONObject("consulo").getString("oauthKey");
-
-		jenkinsPassword = json.getJSONObject("consulo").getString("jenkinsPassword");
-
-		save();
-
+		req.bindJSON(this, json == null ? null : json.getJSONObject("consulo"));
 		return true;
 	}
 

@@ -17,7 +17,7 @@
 
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
-	<f:section title="hub.consulo.io Authorization (deploy platform)" name="consulo">
+	<f:section title="hub.consulo.io Authorization (deploy plugin)" name="consulo">
 		<f:entry title="Password" field="jenkinsPassword">
 			<f:password field="jenkinsPassword"/>
 		</f:entry>

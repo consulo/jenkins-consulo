@@ -22,6 +22,12 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.util.Secret;
+import jakarta.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.github.GHContent;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -36,6 +42,19 @@ public class DeployPlatformTask extends DeployArtifactTaskBase
 	@Extension
 	public static class DescriptorImpl extends DeployDescriptorBase
 	{
+		private Secret githubOAuthKey;
+
+		public Secret getGithubOAuthKey()
+		{
+			return githubOAuthKey;
+		}
+
+		public void setGithubOAuthKey(Secret githubOAuthKey)
+		{
+			this.githubOAuthKey = githubOAuthKey;
+		}
+
+		@Nonnull
 		@Override
 		public String getDisplayName()
 		{
@@ -67,6 +86,8 @@ public class DeployPlatformTask extends DeployArtifactTaskBase
 			throw new IOException("No artifacts");
 		}
 
+		String buildNumber = String.valueOf(build.getNumber());
+
 		int artifactCount = 0;
 		for(FilePath artifactPath : allArtifactsDir.list())
 		{
@@ -82,12 +103,25 @@ public class DeployPlatformTask extends DeployArtifactTaskBase
 				continue;
 			}
 
-			artifactCount += deployArtifact("platformDeploy", Collections.singletonMap("platformVersion", String.valueOf(build.getNumber())), artifactPath, listener, build, artifactCount);
+			artifactCount += deployArtifact("platformDeploy", Collections.singletonMap("platformVersion", buildNumber), artifactPath, listener, build, artifactCount);
 		}
 
 		if(artifactCount == 0)
 		{
 			throw new IOException("No artifacts for deploy");
+		}
+
+		Secret githubSec = ((DescriptorImpl) getDescriptor()).getGithubOAuthKey();
+		String githubOAuthKey = githubSec == null ? null : githubSec.getPlainText();
+		if(!StringUtils.isBlank(githubOAuthKey))
+		{
+			GitHub gitHub = GitHub.connectUsingOAuth(githubOAuthKey);
+
+			GHRepository repository = gitHub.getRepository("consulo/mac-signer");
+
+			GHContent content = repository.getFileContent("CONSULO-BUILD.txt");
+
+			content.update(buildNumber, "Consulo Build #" + buildNumber);
 		}
 		return true;
 	}

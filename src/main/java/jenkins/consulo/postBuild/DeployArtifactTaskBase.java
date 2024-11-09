@@ -74,8 +74,8 @@ public abstract class DeployArtifactTaskBase extends Notifier
 	{
 		listener.getLogger().println("Deploying artifact: " + artifactPath.getRemote());
 
-		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey();
-		String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword();
+		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey().getPlainText();
+		String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword().getPlainText();
 
 		String repoUrl = enableRepositoryUrl ? repositoryUrl : "http://hub-backend:22333/api/repository/";
 
