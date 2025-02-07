@@ -58,6 +58,8 @@ public class Generator
 			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier",
 			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier64",
 			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier-aarch64",
+			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier-loong64",
+			"Consulo/platform/buildSNAPSHOT/modules/consulo/native/fsnotifier-riscv64",
 
 			// mac
 			"Consulo.app/Contents/platform/buildSNAPSHOT/bin/fsnotifier",
