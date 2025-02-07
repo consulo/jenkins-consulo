@@ -24,6 +24,7 @@
 
 	<properties>
 		<jenkins.version>2.440.3</jenkins.version>
+		<maven-license-plugin.version>1.17</maven-license-plugin.version>
 	</properties>
 
 	<repositories>
