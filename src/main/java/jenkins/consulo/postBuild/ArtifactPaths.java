@@ -63,7 +63,7 @@ public class ArtifactPaths
 		return myWin;
 	}
 
-	public String linuxX64ArtifactName()
+	public String linuxArtifactName()
 	{
 		return myLinux;
 	}
