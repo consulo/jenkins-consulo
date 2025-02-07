@@ -22,7 +22,9 @@ import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.User;
+import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.Revision;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.RepositoryBrowser;
@@ -41,8 +43,6 @@ import org.apache.http.impl.client.HttpClients;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -211,7 +211,7 @@ public abstract class DeployArtifactTaskBase extends Notifier
 					pluginHistoryEntry.commitAuthor = fullName + "<" + displayName + ">";
 				}
 
-				updateIfGitToAuthorInfo(entry, pluginHistoryEntry);
+				updateIfGitToAuthorInfo((GitChangeSet) entry, pluginHistoryEntry);
 
 				//URL changeSetLink = browser == null ? null : browser.getChangeSetLink(entry);
 				result.add(pluginHistoryEntry);
@@ -221,11 +221,10 @@ public abstract class DeployArtifactTaskBase extends Notifier
 		return result;
 	}
 
-	private static void updateIfGitToAuthorInfo(ChangeLogSet.Entry entry, PluginHistoryEntry pluginHistoryEntry)
+	private static void updateIfGitToAuthorInfo(GitChangeSet entry, PluginHistoryEntry pluginHistoryEntry)
 	{
-		String author = invokeField(entry, "author", String.class);
-		String authorEmail = invokeField(entry, "authorEmail", String.class);
-		//String authorTime = invokeField(entry, "authorTime", String.class);
+		String author = entry.getAuthorName();
+		String authorEmail = entry.getAuthorEmail();
 
 		if(author != null && authorEmail != null)
 		{
@@ -233,58 +232,10 @@ public abstract class DeployArtifactTaskBase extends Notifier
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> T invokeField(Object o, String fieldName, Class<T> fieldType)
-	{
-		try
-		{
-			Field declaredField = o.getClass().getDeclaredField(fieldName);
-			if(declaredField.getType() != fieldType)
-			{
-				return null;
-			}
-			declaredField.setAccessible(true);
-			return (T) declaredField.get(o);
-		}
-		catch(Throwable ignored)
-		{
-		}
-		return null;
-	}
-
 	private static String getRepoUrl(RepositoryBrowser repositoryBrowser)
 	{
-		try
-		{
-			Method getRepoUrl = findMethod(repositoryBrowser.getClass(), "getRepoUrl");
-			return (String) getRepoUrl.invoke(repositoryBrowser);
-		}
-		catch(Throwable ignored)
-		{
-		}
-		return null;
-	}
-
-	private static Method findMethod(final Class<?> type, String name)
-	{
-		Class<?> target = type;
-
-		while(target != null)
-		{
-			try
-			{
-				Method declaredMethod = target.getDeclaredMethod(name);
-				declaredMethod.setAccessible(true);
-				return declaredMethod;
-			}
-			catch(NoSuchMethodException ignored)
-			{
-			}
-
-			target = target.getSuperclass();
-		}
-
-		return null;
+		GitRepositoryBrowser browser = (GitRepositoryBrowser) repositoryBrowser;
+		return browser.getRepoUrl();
 	}
 
 	public boolean isAllowUnstable()
