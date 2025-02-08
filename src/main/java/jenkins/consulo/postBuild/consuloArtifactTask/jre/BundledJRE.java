@@ -69,7 +69,7 @@ public abstract class BundledJRE<E>
 	{
 		final String[] rootDirectoryRef = new String[2];
 
-		openAndProcessJreArchive(new FilePath(new File(path)), new ArchiveStreamFactory(), new ArchiveInputStreamProcessor()
+		openAndProcessJreArchive(myJdkArchivePath, myArchiveStreamFactory, new ArchiveInputStreamProcessor()
 		{
 			@Override
 			public void run(ArchiveInputStream stream) throws IOException
