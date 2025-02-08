@@ -17,45 +17,39 @@
   -->
 
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-	<f:section name="Windows">
-		<f:entry title="Windows JRE x86 Path/URL" field="winJre32Path">
-			<f:textbox/>
-		</f:entry>
-		<f:entry title="Windows JRE x64 Path/URL" field="winJre64Path">
-			<f:textbox/>
-		</f:entry>
-		<f:entry title="Windows x64 NSIS File" field="winJre64Nsis">
-			<f:textbox/>
-		</f:entry>
-		<f:entry title="Windows JRE AARCH64 Path/URL" field="winJreA64Path">
-			<f:textbox/>
-		</f:entry>
-	</f:section>
+	<f:entry title="Windows JRE x86 Path/URL" field="winJre32Path">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Windows JRE x64 Path/URL" field="winJre64Path">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Windows x64 NSIS File" field="winJre64Nsis">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Windows JRE AARCH64 Path/URL" field="winJreA64Path">
+		<f:textbox/>
+	</f:entry>
 
-	<f:section name="Linux">
-		<f:entry title="Linux JRE x86 Path/URL" field="linuxJre32Path">
-			<f:textbox/>
-		</f:entry>
-		<f:entry title="Linux JRE x64 Path/URL" field="linuxJre64Path">
-			<f:textbox/>
-		</f:entry>
-		<f:entry title="Linux JRE AARCH64 Path/URL" field="linuxJreA64Path">
-			<f:textbox/>
-		</f:entry>
-		<f:entry title="Linux JRE LOONGARCH64 Path/URL" field="linuxJreLoong64Path">
-			<f:textbox/>
-		</f:entry>
-		<f:entry title="Linux JRE RISCV64 Path/URL" field="linuxJreRiscv64Path">
-			<f:textbox/>
-		</f:entry>
-	</f:section>
+	<f:entry title="Mac JRE x64 Path/URL" field="macJre64Path">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Mac JRE AARCH64 Path/URL" field="macJreA64Path">
+		<f:textbox/>
+	</f:entry>
 
-	<f:section name="Mac">
-		<f:entry title="Mac JRE x64 Path/URL" field="macJre64Path">
-			<f:textbox/>
-		</f:entry>
-		<f:entry title="Mac JRE AARCH64 Path/URL" field="macJreA64Path">
-			<f:textbox/>
-		</f:entry>
-	</f:section>
+	<f:entry title="Linux JRE x86 Path/URL" field="linuxJre32Path">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Linux JRE x64 Path/URL" field="linuxJre64Path">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Linux JRE AARCH64 Path/URL" field="linuxJreA64Path">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Linux JRE LOONGARCH64 Path/URL" field="linuxJreLoong64Path">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="Linux JRE RISCV64 Path/URL" field="linuxJreRiscv64Path">
+		<f:textbox/>
+	</f:entry>
 </j:jelly>
