@@ -27,6 +27,7 @@ import org.apache.commons.compress.archivers.cpio.CpioArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -68,7 +69,7 @@ public abstract class BundledJRE<E>
 	{
 		final String[] rootDirectoryRef = new String[2];
 
-		openAndProcessJreArchive(myJdkArchivePath, myArchiveStreamFactory, new ArchiveInputStreamProcessor()
+		openAndProcessJreArchive(new FilePath(new File(path)), new ArchiveStreamFactory(), new ArchiveInputStreamProcessor()
 		{
 			@Override
 			public void run(ArchiveInputStream stream) throws IOException
@@ -84,6 +85,13 @@ public abstract class BundledJRE<E>
 							rootDirectoryRef[0] = name;
 							rootDirectoryRef[1] = tempEntry.getName();
 							break;
+						}
+
+						if(!tempEntry.isDirectory() && name.contains("/bin/"))
+						{
+							String rootPath = name.substring(0, name.indexOf('/'));
+							rootDirectoryRef[0] = rootPath + "/";
+							rootDirectoryRef[1] = rootDirectoryRef[0];
 						}
 					}
 
