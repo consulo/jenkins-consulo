@@ -77,7 +77,7 @@ public abstract class DeployArtifactTaskBase extends Notifier
 		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey().getPlainText();
 		String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword().getPlainText();
 
-		String repoUrl = enableRepositoryUrl ? repositoryUrl : "http://hub-backend:22333/api/repository/";
+		String repoUrl = enableRepositoryUrl ? repositoryUrl : "https://api.consulo.io/repository/";
 
 		StringBuilder builder = new StringBuilder(repoUrl);
 		if(!repoUrl.endsWith("/"))
