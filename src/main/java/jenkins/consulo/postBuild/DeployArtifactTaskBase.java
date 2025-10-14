@@ -34,10 +34,12 @@ import hudson.tasks.Notifier;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.StatusLine;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 
 import javax.servlet.http.HttpServletResponse;
@@ -45,222 +47,205 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author VISTALL
  * @since 17/10/2021
  */
-public abstract class DeployArtifactTaskBase extends Notifier
-{
-	protected final boolean enableRepositoryUrl;
-	protected final boolean allowUnstable;
-	protected final String repositoryUrl;
-	protected final String pluginChannel;
+public abstract class DeployArtifactTaskBase extends Notifier {
+    protected final boolean enableRepositoryUrl;
+    protected final boolean allowUnstable;
+    protected final String repositoryUrl;
+    protected final String pluginChannel;
 
-	protected DeployArtifactTaskBase(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel, boolean allowUnstable)
-	{
-		this.repositoryUrl = repositoryUrl;
-		this.enableRepositoryUrl = enableRepositoryUrl;
-		this.pluginChannel = pluginChannel;
-		this.allowUnstable = allowUnstable;
-	}
+    protected DeployArtifactTaskBase(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel, boolean allowUnstable) {
+        this.repositoryUrl = repositoryUrl;
+        this.enableRepositoryUrl = enableRepositoryUrl;
+        this.pluginChannel = pluginChannel;
+        this.allowUnstable = allowUnstable;
+    }
 
-	protected int deployArtifact(String urlSuffix,
-								 Map<String, String> parameters,
-								 FilePath artifactPath,
-								 BuildListener listener,
-								 AbstractBuild<?, ?> build,
-								 int artifactCount) throws IOException, InterruptedException
-	{
-		listener.getLogger().println("Deploying artifact: " + artifactPath.getRemote());
+    protected int deployArtifact(String urlSuffix,
+                                 Map<String, String> parameters,
+                                 FilePath artifactPath,
+                                 BuildListener listener,
+                                 AbstractBuild<?, ?> build,
+                                 int artifactCount) throws IOException, InterruptedException {
+        listener.getLogger().println("Deploying artifact: " + artifactPath.getRemote());
 
-		String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey().getPlainText();
-		String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword().getPlainText();
+        String deployKey = ((DeployDescriptorBase) getDescriptor()).getOauthKey().getPlainText();
+        String jenkinsPassword = ((DeployDescriptorBase) getDescriptor()).getJenkinsPassword().getPlainText();
 
-		String repoUrl = enableRepositoryUrl ? repositoryUrl : "https://api.consulo.io/repository/";
+        String repoUrl = enableRepositoryUrl ? repositoryUrl : "https://api.consulo.io/repository/";
 
-		StringBuilder builder = new StringBuilder(repoUrl);
-		if(!repoUrl.endsWith("/"))
-		{
-			builder.append("/");
-		}
-		builder.append(urlSuffix).append("?");
+        StringBuilder builder = new StringBuilder(repoUrl);
+        if (!repoUrl.endsWith("/")) {
+            builder.append("/");
+        }
+        builder.append(urlSuffix).append("?");
 
-		Map<String, String> map = new HashMap<>(parameters);
-		map.put("channel", pluginChannel);
+        Map<String, String> map = new HashMap<>(parameters);
+        map.put("channel", pluginChannel);
 
-		Map.Entry[] entries = map.entrySet().toArray(new Map.Entry[0]);
+        Map.Entry[] entries = map.entrySet().toArray(new Map.Entry[0]);
 
-		for(int i = 0; i < entries.length; i++)
-		{
-			if(i != 0)
-			{
-				builder.append("&");
-			}
+        for (int i = 0; i < entries.length; i++) {
+            if (i != 0) {
+                builder.append("&");
+            }
 
-			Map.Entry entry = entries[i];
+            Map.Entry entry = entries[i];
 
-			builder.append(entry.getKey());
-			builder.append("=");
-			builder.append(entry.getValue());
-		}
+            builder.append(entry.getKey());
+            builder.append("=");
+            builder.append(entry.getValue());
+        }
 
-		GithubInfo githubInfo = null;
-		GithubProjectProperty property = build.getProject().getProperty(GithubProjectProperty.class);
-		if(property != null)
-		{
-			String projectUrl = property.getProjectUrlStr();
-			String commitSha1 = null;
+        GithubInfo githubInfo = null;
+        GithubProjectProperty property = build.getProject().getProperty(GithubProjectProperty.class);
+        if (property != null) {
+            String projectUrl = property.getProjectUrlStr();
+            String commitSha1 = null;
 
-			BuildData action = build.getAction(BuildData.class);
-			if(action != null)
-			{
-				Revision lastBuiltRevision = action.getLastBuiltRevision();
-				if(lastBuiltRevision != null)
-				{
-					commitSha1 = lastBuiltRevision.getSha1String();
-				}
-			}
+            BuildData action = build.getAction(BuildData.class);
+            if (action != null) {
+                Revision lastBuiltRevision = action.getLastBuiltRevision();
+                if (lastBuiltRevision != null) {
+                    commitSha1 = lastBuiltRevision.getSha1String();
+                }
+            }
 
-			if(projectUrl != null && commitSha1 != null)
-			{
-				githubInfo = new GithubInfo(projectUrl, commitSha1);
-			}
-		}
+            if (projectUrl != null && commitSha1 != null) {
+                githubInfo = new GithubInfo(projectUrl, commitSha1);
+            }
+        }
 
-		List<PluginHistoryEntry> pluginHistoryEntries = buildChangeSet(build);
-		Gson gson = new Gson();
+        List<PluginHistoryEntry> pluginHistoryEntries = buildChangeSet(build);
+        Gson gson = new Gson();
 
-		InputStream contentStream;
-		try (CloseableHttpClient client = HttpClients.createMinimal())
-		{
-			HttpPost request = new HttpPost(builder.toString());
-			if(!StringUtils.isBlank(jenkinsPassword))
-			{
-				String serviceAccount = "jenkins@consulo.io";
-				String basicAuth = serviceAccount + ":" + jenkinsPassword;
-				request.addHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(basicAuth.getBytes(StandardCharsets.UTF_8)));
-			}
-			else
-			{
-				request.addHeader("Authorization", "Bearer " + deployKey);
-			}
+        InputStream contentStream;
+        HttpClientBuilder clientBuilder = HttpClients.custom();
+        clientBuilder.setConnectionTimeToLive(10, TimeUnit.MINUTES);
 
-			MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
-			entityBuilder.addBinaryBody("file", contentStream = artifactPath.read(), ContentType.DEFAULT_BINARY, artifactPath.getName());
-			if(!pluginHistoryEntries.isEmpty())
-			{
-				String historyJson = gson.toJson(pluginHistoryEntries);
-				entityBuilder.addBinaryBody("history", historyJson.getBytes(StandardCharsets.UTF_8), ContentType.DEFAULT_BINARY, "history");
-			}
+        RequestConfig.Builder requestBuilder = RequestConfig.custom()
+            .setSocketTimeout((int) TimeUnit.MINUTES.toMillis(10))
+            .setConnectionRequestTimeout((int) TimeUnit.MINUTES.toMillis(10))
+            .setConnectTimeout((int) TimeUnit.MINUTES.toMillis(10));
 
-			if(githubInfo != null)
-			{
-				entityBuilder.addBinaryBody("github", gson.toJson(githubInfo).getBytes(StandardCharsets.UTF_8), ContentType.DEFAULT_BINARY, "history");
-			}
+        clientBuilder.setDefaultRequestConfig(requestBuilder.build());
 
-			request.setEntity(entityBuilder.build());
+        try (CloseableHttpClient client = clientBuilder.build()) {
+            HttpPost request = new HttpPost(builder.toString());
+            if (!StringUtils.isBlank(jenkinsPassword)) {
+                String serviceAccount = "jenkins@consulo.io";
+                String basicAuth = serviceAccount + ":" + jenkinsPassword;
+                request.addHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(basicAuth.getBytes(StandardCharsets.UTF_8)));
+            }
+            else {
+                request.addHeader("Authorization", "Bearer " + deployKey);
+            }
 
-			client.execute(request, r ->
-			{
-				StatusLine line = r.getStatusLine();
-				int statusCode = line.getStatusCode();
+            MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+            entityBuilder.addBinaryBody("file", contentStream = artifactPath.read(), ContentType.DEFAULT_BINARY, artifactPath.getName());
+            if (!pluginHistoryEntries.isEmpty()) {
+                String historyJson = gson.toJson(pluginHistoryEntries);
+                entityBuilder.addBinaryBody("history", historyJson.getBytes(StandardCharsets.UTF_8), ContentType.DEFAULT_BINARY, "history");
+            }
 
-				if(statusCode != HttpServletResponse.SC_OK)
-				{
-					throw new IOException("Failed to deploy artifact " + artifactPath.getRemote() + ", Status Code: " + statusCode + ", Status Text: " + line.getReasonPhrase());
-				}
+            if (githubInfo != null) {
+                entityBuilder.addBinaryBody("github", gson.toJson(githubInfo).getBytes(StandardCharsets.UTF_8), ContentType.DEFAULT_BINARY, "history");
+            }
 
-				listener.getLogger().println("Deployed artifact: " + artifactPath.getRemote());
-				return null;
-			});
-		}
+            request.setEntity(entityBuilder.build());
 
-		IOUtils.closeQuietly(contentStream);
+            client.execute(request, r ->
+            {
+                StatusLine line = r.getStatusLine();
+                int statusCode = line.getStatusCode();
 
-		artifactCount++;
-		return artifactCount;
-	}
+                if (statusCode != HttpServletResponse.SC_OK) {
+                    throw new IOException("Failed to deploy artifact " + artifactPath.getRemote() + ", Status Code: " + statusCode + ", Status Text: " + line.getReasonPhrase());
+                }
 
-	public List<PluginHistoryEntry> buildChangeSet(AbstractBuild<?, ?> build)
-	{
-		List<PluginHistoryEntry> result = new ArrayList<>();
+                listener.getLogger().println("Deployed artifact: " + artifactPath.getRemote());
+                return null;
+            });
+        }
 
-		SCM scm = build.getProject().getScm();
-		RepositoryBrowser browser = scm.getEffectiveBrowser();
-		List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = build.getChangeSets();
-		for(ChangeLogSet<? extends ChangeLogSet.Entry> changeSet : changeSets)
-		{
-			String scmUrl = getRepoUrl(browser);
+        IOUtils.closeQuietly(contentStream);
 
-			for(ChangeLogSet.Entry entry : changeSet)
-			{
-				PluginHistoryEntry pluginHistoryEntry = new PluginHistoryEntry();
+        artifactCount++;
+        return artifactCount;
+    }
 
-				pluginHistoryEntry.repoUrl = scmUrl;
-				pluginHistoryEntry.commitMessage = entry.getMsg();
-				pluginHistoryEntry.commitHash = entry.getCommitId();
-				pluginHistoryEntry.commitTimestamp = entry.getTimestamp();
+    public List<PluginHistoryEntry> buildChangeSet(AbstractBuild<?, ?> build) {
+        List<PluginHistoryEntry> result = new ArrayList<>();
 
-				User author = entry.getAuthor();
-				if(author != User.getUnknown())
-				{
-					String displayName = author.getDisplayName();
-					String fullName = author.getFullName();
+        SCM scm = build.getProject().getScm();
+        RepositoryBrowser browser = scm.getEffectiveBrowser();
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = build.getChangeSets();
+        for (ChangeLogSet<? extends ChangeLogSet.Entry> changeSet : changeSets) {
+            String scmUrl = getRepoUrl(browser);
 
-					pluginHistoryEntry.commitAuthor = fullName + "<" + displayName + ">";
-				}
+            for (ChangeLogSet.Entry entry : changeSet) {
+                PluginHistoryEntry pluginHistoryEntry = new PluginHistoryEntry();
 
-				updateIfGitToAuthorInfo((GitChangeSet) entry, pluginHistoryEntry);
+                pluginHistoryEntry.repoUrl = scmUrl;
+                pluginHistoryEntry.commitMessage = entry.getMsg();
+                pluginHistoryEntry.commitHash = entry.getCommitId();
+                pluginHistoryEntry.commitTimestamp = entry.getTimestamp();
 
-				//URL changeSetLink = browser == null ? null : browser.getChangeSetLink(entry);
-				result.add(pluginHistoryEntry);
-			}
-		}
+                User author = entry.getAuthor();
+                if (author != User.getUnknown()) {
+                    String displayName = author.getDisplayName();
+                    String fullName = author.getFullName();
 
-		return result;
-	}
+                    pluginHistoryEntry.commitAuthor = fullName + "<" + displayName + ">";
+                }
 
-	private static void updateIfGitToAuthorInfo(GitChangeSet entry, PluginHistoryEntry pluginHistoryEntry)
-	{
-		String author = entry.getAuthorName();
-		String authorEmail = entry.getAuthorEmail();
+                updateIfGitToAuthorInfo((GitChangeSet) entry, pluginHistoryEntry);
 
-		if(author != null && authorEmail != null)
-		{
-			pluginHistoryEntry.commitAuthor = author + " <" + authorEmail + ">";
-		}
-	}
+                //URL changeSetLink = browser == null ? null : browser.getChangeSetLink(entry);
+                result.add(pluginHistoryEntry);
+            }
+        }
 
-	private static String getRepoUrl(RepositoryBrowser repositoryBrowser)
-	{
-		GitRepositoryBrowser browser = (GitRepositoryBrowser) repositoryBrowser;
-		return browser.getRepoUrl();
-	}
+        return result;
+    }
 
-	public boolean isAllowUnstable()
-	{
-		return allowUnstable;
-	}
+    private static void updateIfGitToAuthorInfo(GitChangeSet entry, PluginHistoryEntry pluginHistoryEntry) {
+        String author = entry.getAuthorName();
+        String authorEmail = entry.getAuthorEmail();
 
-	public boolean isEnableRepositoryUrl()
-	{
-		return enableRepositoryUrl;
-	}
+        if (author != null && authorEmail != null) {
+            pluginHistoryEntry.commitAuthor = author + " <" + authorEmail + ">";
+        }
+    }
 
-	public String getRepositoryUrl()
-	{
-		return repositoryUrl;
-	}
+    private static String getRepoUrl(RepositoryBrowser repositoryBrowser) {
+        GitRepositoryBrowser browser = (GitRepositoryBrowser) repositoryBrowser;
+        return browser.getRepoUrl();
+    }
 
-	public String getPluginChannel()
-	{
-		return pluginChannel;
-	}
+    public boolean isAllowUnstable() {
+        return allowUnstable;
+    }
 
-	@Override
-	public BuildStepMonitor getRequiredMonitorService()
-	{
-		return BuildStepMonitor.BUILD;
-	}
+    public boolean isEnableRepositoryUrl() {
+        return enableRepositoryUrl;
+    }
+
+    public String getRepositoryUrl() {
+        return repositoryUrl;
+    }
+
+    public String getPluginChannel() {
+        return pluginChannel;
+    }
+
+    @Override
+    public BuildStepMonitor getRequiredMonitorService() {
+        return BuildStepMonitor.BUILD;
+    }
 }
