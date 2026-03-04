@@ -18,19 +18,23 @@
 
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
-	<f:block>
-		<table>
-			<f:optionalBlock title="Use custom plugin repostiry" field="enableRepositoryUrl" inline="true">
-				<f:entry title="URL">
-					<f:textbox field="repositoryUrl"/>
-				</f:entry>
-			</f:optionalBlock>
+    <f:block>
+        <table>
+            <f:entry title="Build SNAPSHOT" field="buildSnapshot">
+                <f:textbox placeholder="By default '3-SNAPSHOT'"/>
+            </f:entry>
 
-			<f:entry title="Channel" field="pluginChannel">
-				<f:select default="nightly"/>
-			</f:entry>
+            <f:optionalBlock title="Use custom plugin repostiry" field="enableRepositoryUrl" inline="true">
+                <f:entry title="URL">
+                    <f:textbox field="repositoryUrl"/>
+                </f:entry>
+            </f:optionalBlock>
 
-			<f:checkbox title="Allow unstable build?" field="allowUnstable"/>
-		</table>
-	</f:block>
+            <f:entry title="Channel" field="pluginChannel">
+                <f:select default="nightly"/>
+            </f:entry>
+
+            <f:checkbox title="Allow unstable build?" field="allowUnstable"/>
+        </table>
+    </f:block>
 </j:jelly>

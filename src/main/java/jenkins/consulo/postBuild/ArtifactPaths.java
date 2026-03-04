@@ -16,8 +16,6 @@
 
 package jenkins.consulo.postBuild;
 
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import jakarta.annotation.Nonnull;
 
 import java.io.IOException;
@@ -27,15 +25,14 @@ import java.io.IOException;
  * @since 29-Aug-17
  */
 public class ArtifactPaths {
-    private static final String _3_SNAPSHOT = "3-SNAPSHOT";
-    private static final String _4_SNAPSHOT = "4-SNAPSHOT";
+    public static final String _3_SNAPSHOT = "3-SNAPSHOT";
 
     @Nonnull
-    public static ArtifactPaths find(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException {
-        String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win";
-        String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux";
-        String macX64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64";
-        String macA64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-aarch64";
+    public static ArtifactPaths find(String buildSnapshot) throws InterruptedException, IOException {
+        String win = "consulo-bundle-" + buildSnapshot + "-desktop-awt-win";
+        String linux = "consulo-bundle-" + buildSnapshot + "-desktop-awt-linux";
+        String macX64 = "consulo-bundle-" + buildSnapshot + "-desktop-awt-mac-x86-64";
+        String macA64 = "consulo-bundle-" + buildSnapshot + "-desktop-awt-mac-aarch64";
         return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, macX64, macA64);
     }
 

@@ -32,12 +32,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Objects;
 
 /**
  * @author VISTALL
  * @since 29-Aug-16
  */
 public class DeployPlatformTask extends DeployArtifactTaskBase {
+
     @Extension
     public static class DescriptorImpl extends DeployDescriptorBase {
         private Secret githubOAuthKey;
@@ -57,9 +59,24 @@ public class DeployPlatformTask extends DeployArtifactTaskBase {
         }
     }
 
+    private String myBuildSnapshot;
+
     @DataBoundConstructor
-    public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel, boolean allowUnstable) {
+    public DeployPlatformTask(String repositoryUrl,
+                              boolean enableRepositoryUrl,
+                              String pluginChannel,
+                              boolean allowUnstable,
+                              String buildSnapshot) {
         super(repositoryUrl, enableRepositoryUrl, pluginChannel, allowUnstable);
+        myBuildSnapshot = buildSnapshot;
+    }
+
+    public void setBuildSnapshot(String buildSnapshot) {
+        myBuildSnapshot = buildSnapshot;
+    }
+
+    public String getBuildSnapshot() {
+        return myBuildSnapshot;
     }
 
     @Override
@@ -69,7 +86,11 @@ public class DeployPlatformTask extends DeployArtifactTaskBase {
             throw new IOException("Project is not build");
         }
 
-        ArtifactPaths artifactPaths = ArtifactPaths.find(build, listener);
+        DescriptorImpl descriptor = (DescriptorImpl) getDescriptor();
+
+        String buildSnapshot = Objects.requireNonNull(getBuildSnapshot(), ArtifactPaths._3_SNAPSHOT);
+
+        ArtifactPaths artifactPaths = ArtifactPaths.find(buildSnapshot);
 
         FilePath workspace = build.getWorkspace();
         FilePath allArtifactsDir = workspace.child(artifactPaths.getAllArtifactsPath());
@@ -98,7 +119,7 @@ public class DeployPlatformTask extends DeployArtifactTaskBase {
             throw new IOException("No artifacts for deploy");
         }
 
-        Secret githubSec = ((DescriptorImpl) getDescriptor()).getGithubOAuthKey();
+        Secret githubSec = descriptor.getGithubOAuthKey();
         String githubOAuthKey = githubSec == null ? null : githubSec.getPlainText();
         if (!StringUtils.isBlank(githubOAuthKey)) {
             GitHub gitHub = GitHub.connectUsingOAuth(githubOAuthKey);

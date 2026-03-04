@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * @author VISTALL
@@ -73,6 +74,8 @@ public class ConsuloArtifactPostTask extends Notifier {
 
     private String winJre64Nsis;
 
+    private String buildSnapshot;
+
     @DataBoundConstructor
     public ConsuloArtifactPostTask(String winJre32Path,
                                    String winJreA64Path,
@@ -84,7 +87,8 @@ public class ConsuloArtifactPostTask extends Notifier {
                                    String linuxJreRiscv64Path,
                                    String macJre64Path,
                                    String macJreA64Path,
-                                   String winJre64Nsis) {
+                                   String winJre64Nsis,
+                                   String buildSnapshot) {
         this.winJre32Path = winJre32Path;
         this.winJre64Path = winJre64Path;
         this.winJreA64Path = winJreA64Path;
@@ -99,6 +103,7 @@ public class ConsuloArtifactPostTask extends Notifier {
         this.macJreA64Path = macJreA64Path;
 
         this.winJre64Nsis = winJre64Nsis;
+        this.buildSnapshot = buildSnapshot;
     }
 
     public String getLinuxJreLoong64Path() {
@@ -145,6 +150,10 @@ public class ConsuloArtifactPostTask extends Notifier {
         return linuxJreRiscv64Path;
     }
 
+    public String getBuildSnapshot() {
+        return buildSnapshot;
+    }
+
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
@@ -157,7 +166,9 @@ public class ConsuloArtifactPostTask extends Notifier {
             throw new IOException("Project is not build");
         }
 
-        ArtifactPaths artifactPaths = ArtifactPaths.find(build, listener);
+        String buildSnapshot = Objects.requireNonNull(getBuildSnapshot(), ArtifactPaths._3_SNAPSHOT);
+
+        ArtifactPaths artifactPaths = ArtifactPaths.find(buildSnapshot);
 
         FilePath workspace = build.getWorkspace();
 
