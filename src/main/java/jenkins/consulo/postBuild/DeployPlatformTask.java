@@ -37,92 +37,78 @@ import java.util.Collections;
  * @author VISTALL
  * @since 29-Aug-16
  */
-public class DeployPlatformTask extends DeployArtifactTaskBase
-{
-	@Extension
-	public static class DescriptorImpl extends DeployDescriptorBase
-	{
-		private Secret githubOAuthKey;
+public class DeployPlatformTask extends DeployArtifactTaskBase {
+    @Extension
+    public static class DescriptorImpl extends DeployDescriptorBase {
+        private Secret githubOAuthKey;
 
-		public Secret getGithubOAuthKey()
-		{
-			return githubOAuthKey;
-		}
+        public Secret getGithubOAuthKey() {
+            return githubOAuthKey;
+        }
 
-		public void setGithubOAuthKey(Secret githubOAuthKey)
-		{
-			this.githubOAuthKey = githubOAuthKey;
-		}
+        public void setGithubOAuthKey(Secret githubOAuthKey) {
+            this.githubOAuthKey = githubOAuthKey;
+        }
 
-		@Nonnull
-		@Override
-		public String getDisplayName()
-		{
-			return "Consulo/Deploy platform artifacts to repository";
-		}
-	}
+        @Nonnull
+        @Override
+        public String getDisplayName() {
+            return "Consulo/Deploy platform artifacts to repository";
+        }
+    }
 
-	@DataBoundConstructor
-	public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel, boolean allowUnstable)
-	{
-		super(repositoryUrl, enableRepositoryUrl, pluginChannel, allowUnstable);
-	}
+    @DataBoundConstructor
+    public DeployPlatformTask(String repositoryUrl, boolean enableRepositoryUrl, String pluginChannel, boolean allowUnstable) {
+        super(repositoryUrl, enableRepositoryUrl, pluginChannel, allowUnstable);
+    }
 
-	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException
-	{
-		Result result = build.getResult();
-		if(result == null || (allowUnstable ? result.isWorseThan(Result.UNSTABLE) : result.isWorseOrEqualTo(Result.UNSTABLE)))
-		{
-			throw new IOException("Project is not build");
-		}
+    @Override
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        Result result = build.getResult();
+        if (result == null || (allowUnstable ? result.isWorseThan(Result.UNSTABLE) : result.isWorseOrEqualTo(Result.UNSTABLE))) {
+            throw new IOException("Project is not build");
+        }
 
-		ArtifactPaths artifactPaths = ArtifactPaths.find(build, listener);
+        ArtifactPaths artifactPaths = ArtifactPaths.find(build, listener);
 
-		FilePath workspace = build.getWorkspace();
-		FilePath allArtifactsDir = workspace.child(artifactPaths.getAllArtifactsPath());
-		if(!allArtifactsDir.exists())
-		{
-			throw new IOException("No artifacts");
-		}
+        FilePath workspace = build.getWorkspace();
+        FilePath allArtifactsDir = workspace.child(artifactPaths.getAllArtifactsPath());
+        if (!allArtifactsDir.exists()) {
+            throw new IOException("No artifacts");
+        }
 
-		String buildNumber = String.valueOf(build.getNumber());
+        String buildNumber = String.valueOf(build.getNumber());
 
-		int artifactCount = 0;
-		for(FilePath artifactPath : allArtifactsDir.list())
-		{
-			if(artifactPath.isDirectory())
-			{
-				continue;
-			}
+        int artifactCount = 0;
+        for (FilePath artifactPath : allArtifactsDir.list()) {
+            if (artifactPath.isDirectory()) {
+                continue;
+            }
 
-			String baseName = artifactPath.getBaseName();
+            String baseName = artifactPath.getBaseName();
 
-			if(!baseName.startsWith("consulo.dist."))
-			{
-				continue;
-			}
+            if (!baseName.startsWith("consulo.dist.")) {
+                continue;
+            }
 
-			artifactCount += deployArtifact("platformDeploy", Collections.singletonMap("platformVersion", buildNumber), artifactPath, listener, build, artifactCount);
-		}
+            artifactCount += deployArtifact("platformDeploy", Collections.singletonMap("platformVersion", buildNumber), artifactPath, listener, build, artifactCount);
+        }
 
-		if(artifactCount == 0)
-		{
-			throw new IOException("No artifacts for deploy");
-		}
+        if (artifactCount == 0) {
+            throw new IOException("No artifacts for deploy");
+        }
 
-		Secret githubSec = ((DescriptorImpl) getDescriptor()).getGithubOAuthKey();
-		String githubOAuthKey = githubSec == null ? null : githubSec.getPlainText();
-		if(!StringUtils.isBlank(githubOAuthKey))
-		{
-			GitHub gitHub = GitHub.connectUsingOAuth(githubOAuthKey);
+        Secret githubSec = ((DescriptorImpl) getDescriptor()).getGithubOAuthKey();
+        String githubOAuthKey = githubSec == null ? null : githubSec.getPlainText();
+        if (!StringUtils.isBlank(githubOAuthKey)) {
+            GitHub gitHub = GitHub.connectUsingOAuth(githubOAuthKey);
 
-			GHRepository repository = gitHub.getRepository("consulo/mac-signer");
+            GHRepository repository = gitHub.getRepository("consulo/distro-signer");
 
-			GHContent content = repository.getFileContent("CONSULO-BUILD.txt");
+            GHContent content = repository.getFileContent("CONSULO-BUILD.txt");
 
-			content.update(buildNumber, "Consulo Build #" + buildNumber);
-		}
-		return true;
-	}
+            content.update(buildNumber, "Consulo Build #" + buildNumber);
+        }
+        return true;
+    }
 }

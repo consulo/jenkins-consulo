@@ -26,65 +26,57 @@ import java.io.IOException;
  * @author VISTALL
  * @since 29-Aug-17
  */
-public class ArtifactPaths
-{
-	private static final String _3_SNAPSHOT = "3-SNAPSHOT";
+public class ArtifactPaths {
+    private static final String _3_SNAPSHOT = "3-SNAPSHOT";
+    private static final String _4_SNAPSHOT = "4-SNAPSHOT";
 
-	@Nonnull
-	public static ArtifactPaths find(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException
-	{
-		String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win";
-		String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux";
-		String macX64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64";
-		String macA64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-aarch64";
-		return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, macX64, macA64);
-	}
+    @Nonnull
+    public static ArtifactPaths find(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException {
+        String win = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-win";
+        String linux = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-linux";
+        String macX64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-x86-64";
+        String macA64 = "consulo-bundle-" + _3_SNAPSHOT + "-desktop-awt-mac-aarch64";
+        return new ArtifactPaths("distribution/target/all", "distribution/target", win, linux, macX64, macA64);
+    }
 
-	private final String myAllArtifactsPath;
-	private final String myRawArtifactsPath;
+    private final String myAllArtifactsPath;
+    private final String myRawArtifactsPath;
 
-	private final String myWin;
-	private final String myLinux;
-	private final String myMac64;
-	private final String myMacA64;
+    private final String myWin;
+    private final String myLinux;
+    private final String myMac64;
+    private final String myMacA64;
 
-	private ArtifactPaths(String allArtifactsPath, String rawArtifactsPath, String win, String linux, String mac64, String macA64)
-	{
-		myAllArtifactsPath = allArtifactsPath;
-		myRawArtifactsPath = rawArtifactsPath;
-		myWin = win;
-		myLinux = linux;
-		myMac64 = mac64;
-		myMacA64 = macA64;
-	}
+    private ArtifactPaths(String allArtifactsPath, String rawArtifactsPath, String win, String linux, String mac64, String macA64) {
+        myAllArtifactsPath = allArtifactsPath;
+        myRawArtifactsPath = rawArtifactsPath;
+        myWin = win;
+        myLinux = linux;
+        myMac64 = mac64;
+        myMacA64 = macA64;
+    }
 
-	public String winX64ArtifactName()
-	{
-		return myWin;
-	}
+    public String winX64ArtifactName() {
+        return myWin;
+    }
 
-	public String linuxArtifactName()
-	{
-		return myLinux;
-	}
+    public String linuxArtifactName() {
+        return myLinux;
+    }
 
-	public String macX64ArtifactName()
-	{
-		return myMac64;
-	}
+    public String macX64ArtifactName() {
+        return myMac64;
+    }
 
-	public String macA64ArtifactName()
-	{
-		return myMacA64;
-	}
+    public String macA64ArtifactName() {
+        return myMacA64;
+    }
 
-	public String getAllArtifactsPath()
-	{
-		return myAllArtifactsPath;
-	}
+    public String getAllArtifactsPath() {
+        return myAllArtifactsPath;
+    }
 
-	public String getRawArtifactsPath()
-	{
-		return myRawArtifactsPath;
-	}
+    public String getRawArtifactsPath() {
+        return myRawArtifactsPath;
+    }
 }
